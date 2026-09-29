@@ -33,7 +33,5 @@ public class KeyInput : MonoBehaviour
 
         if (Keyboard.current.wKey.isPressed)
             moveY += 1;
-
-        Debug.Log($"attack1:{attack1} attack2:{attack2} skill1:{skill1} skill2:{skill2} moveX:{moveX} moveY:{moveY}");
     }
 }
