@@ -25,5 +25,9 @@ public class KeyInput : MonoBehaviour
         // Movement axes
         moveX = Input.GetAxisRaw("Horizontal"); // A = -1, D = 1
         moveY = Input.GetAxisRaw("Vertical"); // S = -1, W = 1
+
+        //print everything
+        Debug.Log($"attack1: {attack1}, attack2: {attack2}, skill1: {skill1}, skill2: {skill2}, moveX: {moveX}, moveY: {moveY}");
+        Debug.ClearDeveloperConsole();
     }
 }
