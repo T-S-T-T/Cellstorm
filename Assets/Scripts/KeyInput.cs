@@ -1,33 +1,39 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class KeyInput : MonoBehaviour
 {
-    [Header("Actions")]
     public bool attack1;
     public bool attack2;
     public bool skill1;
     public bool skill2;
 
-    [Header("Movement")]
     public float moveX;
     public float moveY;
 
     void Update()
     {
-        // Mouse buttons
-        attack1 = Input.GetMouseButton(0); // Left Click
-        attack2 = Input.GetMouseButton(1); // Right Click
+        attack1 = Mouse.current.leftButton.isPressed;
+        attack2 = Mouse.current.rightButton.isPressed;
 
-        // Skills
-        skill1 = Input.GetKey(KeyCode.Q);
-        skill2 = Input.GetKey(KeyCode.E);
+        skill1 = Keyboard.current.qKey.isPressed;
+        skill2 = Keyboard.current.eKey.isPressed;
 
-        // Movement axes
-        moveX = Input.GetAxisRaw("Horizontal"); // A = -1, D = 1
-        moveY = Input.GetAxisRaw("Vertical"); // S = -1, W = 1
+        moveX = 0;
+        moveY = 0;
 
-        //print everything
-        Debug.Log($"attack1: {attack1}, attack2: {attack2}, skill1: {skill1}, skill2: {skill2}, moveX: {moveX}, moveY: {moveY}");
-        Debug.ClearDeveloperConsole();
+        if (Keyboard.current.aKey.isPressed)
+            moveX -= 1;
+
+        if (Keyboard.current.dKey.isPressed)
+            moveX += 1;
+
+        if (Keyboard.current.sKey.isPressed)
+            moveY -= 1;
+
+        if (Keyboard.current.wKey.isPressed)
+            moveY += 1;
+
+        Debug.Log($"attack1:{attack1} attack2:{attack2} skill1:{skill1} skill2:{skill2} moveX:{moveX} moveY:{moveY}");
     }
 }
