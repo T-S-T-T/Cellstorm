@@ -2,15 +2,16 @@ using UnityEngine;
 
 public class movement : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        Debug.Log("test");
-    }
+    public KeyInput keyInput;
+    public float speed = 5f;
 
-    // Update is called once per frame
     void Update()
     {
-        
+        Vector2 moveDirection = new Vector2(
+        keyInput.moveX,
+        keyInput.moveY
+        ).normalized;
+
+        transform.position += (Vector3)(moveDirection * speed * Time.deltaTime);
     }
 }
