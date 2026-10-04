@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class CameraMovement : MonoBehaviour
 {
     public Transform player;
-    public float mouseInfluence = 0.35f;
+    public float mouseInfluence = 0.01f;
     public float smoothSpeed = 5f;
 
     private Camera cam;
