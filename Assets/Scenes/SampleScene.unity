@@ -459,7 +459,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71af229ceacffc44db21e697470ba1d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  player: {fileID: 0}
+  player: {fileID: 1421574536}
   mouseInfluence: 0.5
   smoothSpeed: 5
 --- !u!1 &1330550316
