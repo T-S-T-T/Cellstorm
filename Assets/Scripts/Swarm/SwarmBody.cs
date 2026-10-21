@@ -1,50 +1,55 @@
 using System;
+using Cellstorm.Combat;
 using Cellstorm.Core;
 using UnityEngine;
 
 namespace Cellstorm.Swarm
 {
     /// <summary>
-    /// The physical body of a swarm: movement with inertia ("drag"), cell-count based size,
-    /// and a turn-rate limited aim direction. Cell count lives here temporarily; in Phase 2 it moves
-    /// to the stat component and this class reads it from there.
+    /// The physical body of the player swarm: movement with inertia, size from cell count,
+    /// knockback, and a turn-rate limited aim direction. Cells, DEF and speed now come from SwarmStats.
     /// </summary>
-    [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D))]
-    public class SwarmBody : MonoBehaviour
+    [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D), typeof(SwarmStats))]
+    public class SwarmBody : MonoBehaviour, IKnockbackable
     {
-        [Header("Cells (temporary - moves to the stat component in Phase 2)")]
-        [SerializeField, Min(1)] int cellCount = 5;
-
         [Header("Size")]
         [Tooltip("Radius = this * sqrt(cells). 5 cells ~ 0.34, 50 ~ 1.06, 500 ~ 3.4")]
         [SerializeField] float radiusPerSqrtCell = 0.15f;
         [SerializeField] float radiusSmoothing = 6f;
 
         [Header("Movement")]
-        [Tooltip("GDD speed stat (base 2).")]
-        [SerializeField] float speedStat = 2f;
+        [Tooltip("World units per second for each point of the Speed stat (base 2).")]
         [SerializeField] float unitsPerSpeedPoint = 2.5f;
         [Tooltip("How quickly the swarm speeds up (units/s^2).")]
         [SerializeField] float acceleration = 16f;
         [Tooltip("How quickly the swarm slows down when no key is held. Lower = more sliding.")]
         [SerializeField] float deceleration = 7f;
 
+        [Header("Knockback")]
+        [SerializeField] float knockbackDecay = 20f;
+        [SerializeField] float maxKnockbackSpeed = 12f;
+
         [Header("Aiming")]
         [SerializeField] float turnRateDegPerSec = 360f;
 
         Rigidbody2D _rb;
         CircleCollider2D _col;
+        SwarmStats _stats;
+        Vector2 _moveVelocity;
+        Vector2 _knockback;
         float _aimAngle = 90f;
 
         /// <summary>Raised when the cell count changes (new count).</summary>
         public event Action<int> CellCountChanged;
 
-        public int CellCount => cellCount;
+        public SwarmStats Stats => _stats;
+        public bool IsDead => _stats.IsDead;
+        public int CellCount => _stats.Cells;
         /// <summary>Target radius for the current cell count.</summary>
-        public float Radius => radiusPerSqrtCell * Mathf.Sqrt(cellCount);
+        public float Radius => radiusPerSqrtCell * Mathf.Sqrt(Mathf.Max(1, _stats.Cells));
         /// <summary>Radius eased toward Radius; use for visuals and camera.</summary>
         public float SmoothedRadius { get; private set; }
-        public float MoveSpeed => speedStat * unitsPerSpeedPoint;
+        public float MoveSpeed => _stats.Speed * unitsPerSpeedPoint;
 
         /// <summary>Weapons set this below 1 while shaping/executing (reduced turning rate).</summary>
         public float TurnRateMultiplier { get; set; } = 1f;
@@ -56,28 +61,38 @@ namespace Cellstorm.Swarm
         {
             _rb = GetComponent<Rigidbody2D>();
             _col = GetComponent<CircleCollider2D>();
+            _stats = GetComponent<SwarmStats>();
+            if (_stats == null) _stats = gameObject.AddComponent<SwarmStats>();
+
             _rb.gravityScale = 0f;
             _rb.freezeRotation = true;
             _rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-            cellCount = Mathf.Max(1, cellCount);
             SmoothedRadius = Radius;
             _col.radius = Radius;
+            _stats.CellsChanged += OnCellsChanged;
         }
 
-        void OnValidate()
+        void OnDestroy()
         {
-            cellCount = Mathf.Max(1, cellCount);
-            if (Application.isPlaying && _col != null) _col.radius = Radius;
+            if (_stats != null) _stats.CellsChanged -= OnCellsChanged;
         }
 
+        void OnCellsChanged(int cells)
+        {
+            _col.radius = Radius;
+            CellCountChanged?.Invoke(cells);
+        }
+
+        /// <summary>Test helper (Phase 1 debug keys): sets max cells and current cells.</summary>
         public void SetCellCount(int count)
         {
-            count = Mathf.Max(1, count);
-            if (count == cellCount) return;
-            cellCount = count;
-            if (_col != null) _col.radius = Radius;
-            CellCountChanged?.Invoke(cellCount);
+            _stats.DebugSetMaxAndCells(count);
+        }
+
+        public void AddKnockback(Vector2 velocity)
+        {
+            _knockback = Vector2.ClampMagnitude(_knockback + velocity, maxKnockbackSpeed);
         }
 
         void Update()
@@ -105,12 +120,15 @@ namespace Cellstorm.Swarm
             Vector2 input = CanAct() ? InputService.Move.ReadValue<Vector2>() : Vector2.zero;
             Vector2 targetVelocity = input * MoveSpeed;
             float rate = input.sqrMagnitude > 0.01f ? acceleration : deceleration;
-            _rb.linearVelocity = Vector2.MoveTowards(
-                _rb.linearVelocity, targetVelocity, rate * Time.fixedDeltaTime);
+
+            _moveVelocity = Vector2.MoveTowards(_moveVelocity, targetVelocity, rate * Time.fixedDeltaTime);
+            _knockback = Vector2.MoveTowards(_knockback, Vector2.zero, knockbackDecay * Time.fixedDeltaTime);
+            _rb.linearVelocity = _moveVelocity + _knockback;
         }
 
-        static bool CanAct()
+        bool CanAct()
         {
+            if (_stats != null && _stats.IsDead) return false;
             return GameManager.Instance == null || GameManager.Instance.IsPlaying;
         }
     }

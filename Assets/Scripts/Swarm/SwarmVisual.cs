@@ -93,6 +93,13 @@ namespace Cellstorm.Swarm
         {
             if (body == null) return;
 
+            if (body.IsDead)
+            {
+                if (_container.gameObject.activeSelf) _container.gameObject.SetActive(false);
+                if (_aimMarker != null && _aimMarker.gameObject.activeSelf) _aimMarker.gameObject.SetActive(false);
+                return;
+            }
+
             float dt = Mathf.Min(Time.deltaTime, MaxDt);
 
             int want = Mathf.Min(body.CellCount, maxVisualCells);
