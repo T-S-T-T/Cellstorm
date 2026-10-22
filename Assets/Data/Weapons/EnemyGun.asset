@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e1494123511bc84383c1a41a65e4278, type: 3}
+  m_Name: EnemyGun
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.WeaponSO
+  id: enemy_gun
+  displayName: Enemy Gun
+  description: 'The enemy railgun: 5 seconds to form. Destroy its barrel cells to interrupt it.'
+  icon: {fileID: 0}
+  kind: 0
+  type: 2
+  shapeTime: 5
+  executeTime: 0
+  cooldown: 3
+  cancelCooldown: 0.5
+  cellShare: 0.1
+  turnRateWhileActive: 0.3
+  dashSpeed: 12
+  coneAngle: 90
+  coneRange: 2
+  biteDefMultiplier: 2
+  bulletSpeedMultiplier: 2
+  bulletDefMultiplier: 2
+  pierce: 0
+  bulletRadius: 0.2
+  defMultiplier: 2
+  autoWin: 1

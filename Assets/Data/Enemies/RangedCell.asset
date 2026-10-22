@@ -23,6 +23,7 @@ MonoBehaviour:
   explosionTriggerRange: 0.6
   explosionRadius: 1.8
   explosionDamage: 2
+  weapon: {fileID: 11400000, guid: f98b4b4520451484b8007c732e9f3129, type: 2}
   scoreValue: 2
   scorePerCell: 1
   expValue: 10

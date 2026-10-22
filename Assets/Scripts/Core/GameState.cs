@@ -7,6 +7,8 @@ namespace Cellstorm.Core
         Paused,
         LevelUp,
         Won,
-        Dead
+        Dead,
+        /// <summary>Choosing the starting swarm at the beginning of a run (time is frozen).</summary>
+        LoadoutSelect
     }
 }
