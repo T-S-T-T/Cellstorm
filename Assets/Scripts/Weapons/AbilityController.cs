@@ -151,6 +151,36 @@ namespace Cellstorm.Weapons
             _slots[slot] = null;
         }
 
+        /// <summary>
+        /// Swap mode: move the ability in 'from' to 'to'. If 'to' is occupied the two trade places.
+        /// Weapons only fit weapon slots (0-1) and skills only skill slots (2-3). Returns false if not allowed.
+        /// Putting an ability back in its own slot is allowed.
+        /// </summary>
+        public bool SwapSlots(int from, int to)
+        {
+            if (from < 0 || from >= SlotCount || to < 0 || to >= SlotCount) return false;
+            var a = _slots[from];
+            if (a == null) return false;
+            if (from == to) return true;
+
+            bool toIsWeaponSlot = to < 2;
+            if ((a.Data.kind == AbilityKind.Weapon) != toIsWeaponSlot) return false;
+
+            var b = _slots[to];
+            if (b != null && (b.Data.kind == AbilityKind.Weapon) != (from < 2)) return false;
+
+            CancelIfShaping(a);
+            CancelIfShaping(b);
+            _slots[to] = a;
+            _slots[from] = b;
+            return true;
+        }
+
+        static void CancelIfShaping(Ability x)
+        {
+            if (x != null && (x.Phase == AbilityPhase.Shaping || x.Phase == AbilityPhase.Primed)) x.Cancel();
+        }
+
         public void CancelAll()
         {
             for (int i = 0; i < SlotCount; i++)

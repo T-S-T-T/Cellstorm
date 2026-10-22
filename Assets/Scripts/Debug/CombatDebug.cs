@@ -127,6 +127,7 @@ namespace Cellstorm.Debugging
 
         void OnGUI()
         {
+            if (!DebugVisibility.Show) return;
             if (player == null) return;
             var s = player.Stats;
 

@@ -46,6 +46,7 @@ namespace Cellstorm.Debugging
 
         void OnGUI()
         {
+            if (!DebugVisibility.Show) return;
             var pp = PlayerProgress.Instance;
             var build = PlayerBuild.Instance;
             if (pp == null || build == null) return;

@@ -48,6 +48,7 @@ namespace Cellstorm.Debugging
 
         void OnGUI()
         {
+            if (!DebugVisibility.Show) return;
             if (body == null) return;
             int visual = _visual != null ? _visual.ActiveVisualCells : 0;
             GUI.Label(new Rect(10, 35, 800, 25),

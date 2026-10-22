@@ -63,6 +63,7 @@ namespace Cellstorm.Debugging
 
         void OnGUI()
         {
+            if (!DebugVisibility.Show) return;
             var run = RunDirector.Instance;
             var spawner = EnemySpawner.Instance;
             if (run == null) return;
@@ -84,7 +85,6 @@ namespace Cellstorm.Debugging
             GUI.Label(new Rect(10, 210, 1300, 25),
                 "N next milestone   J +60s   G god mode   Y +5 DEF   L kill all enemies   E endless (after win)");
 
-            DrawBossBar();
 
             if (GameManager.Instance != null && GameManager.Instance.State == GameState.Won)
             {

@@ -25,6 +25,7 @@ namespace Cellstorm.Debugging
 
         void OnGUI()
         {
+            if (!DebugVisibility.Show) return;
             var gm = GameManager.Instance;
             string state = gm != null ? gm.State.ToString() : "No GameManager";
             GUI.Label(new Rect(10, 10, 500, 25),

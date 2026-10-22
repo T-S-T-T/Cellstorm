@@ -85,6 +85,7 @@ namespace Cellstorm.Debugging
 
         void OnGUI()
         {
+            if (!DebugVisibility.Show) return;
             if (_player == null) return;
 
             if (_abilities == null)

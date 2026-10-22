@@ -9,6 +9,8 @@ namespace Cellstorm.Core
         Won,
         Dead,
         /// <summary>Choosing the starting swarm at the beginning of a run (time is frozen).</summary>
-        LoadoutSelect
+        LoadoutSelect,
+        /// <summary>Swap mode (F): the game is frozen while weapon and skill slots are rearranged.</summary>
+        SwapMode
     }
 }
