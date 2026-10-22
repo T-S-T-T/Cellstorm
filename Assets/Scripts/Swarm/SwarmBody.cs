@@ -54,6 +54,10 @@ namespace Cellstorm.Swarm
 
         /// <summary>Weapons set this below 1 while shaping/executing (reduced turning rate).</summary>
         public float TurnRateMultiplier { get; set; } = 1f;
+
+        /// <summary>Balance bot: movement input (replaces the keys) and aim point (replaces the mouse).</summary>
+        public Vector2? BotMove { get; set; }
+        public Vector2? BotAimPoint { get; set; }
         public float AimAngle => _aimAngle;
         public Vector2 AimDirection =>
             new Vector2(Mathf.Cos(_aimAngle * Mathf.Deg2Rad), Mathf.Sin(_aimAngle * Mathf.Deg2Rad));
@@ -106,8 +110,16 @@ namespace Cellstorm.Swarm
             var cam = Camera.main;
             if (cam == null) return;
 
-            Vector2 screen = InputService.Aim.ReadValue<Vector2>();
-            Vector3 world = cam.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 0f));
+            Vector3 world;
+            if (BotAimPoint.HasValue)
+            {
+                world = BotAimPoint.Value;
+            }
+            else
+            {
+                Vector2 screen = InputService.Aim.ReadValue<Vector2>();
+                world = cam.ScreenToWorldPoint(new Vector3(screen.x, screen.y, 0f));
+            }
             Vector2 to = (Vector2)world - (Vector2)transform.position;
             if (to.sqrMagnitude < 0.0001f) return;
 
@@ -118,7 +130,8 @@ namespace Cellstorm.Swarm
 
         void FixedUpdate()
         {
-            Vector2 input = CanAct() ? InputService.Move.ReadValue<Vector2>() : Vector2.zero;
+            Vector2 input = Vector2.zero;
+            if (CanAct()) input = BotMove.HasValue ? BotMove.Value : InputService.Move.ReadValue<Vector2>();
             Vector2 targetVelocity = input * MoveSpeed;
             float rate = input.sqrMagnitude > 0.01f ? acceleration : deceleration;
 

@@ -20,8 +20,8 @@ namespace Cellstorm.Meta
             new Entry { id = "jaw", name = "Jaw", threshold = 100 },
             new Entry { id = "hardening", name = "Hardening", threshold = 150 },
             new Entry { id = "gun", name = "Gun", threshold = 200 },
-            new Entry { id = "loadout_speedy", name = "Speedy loadout", threshold = 300 },   // placeholder
-            new Entry { id = "loadout_tank", name = "Tank loadout", threshold = 500 }        // placeholder
+            new Entry { id = "loadout_speedy", name = "Speedy loadout", threshold = 3000 },  // placeholder, see README balance table
+            new Entry { id = "loadout_tank", name = "Tank loadout", threshold = 10000 }  // placeholder, see README balance table
         };
 
         public static int ThresholdFor(string id)

@@ -11,6 +11,9 @@ namespace Cellstorm.Core
     {
         public static GameManager Instance { get; private set; }
 
+        /// <summary>Time scale while playing. Normally 1; the balance bot raises it to fast-forward runs.</summary>
+        public static float SpeedMultiplier { get; set; } = 1f;
+
         [SerializeField] GameState startState = GameState.Playing;
 
         public GameState State { get; private set; }
@@ -75,13 +78,19 @@ namespace Cellstorm.Core
             StateChanged?.Invoke(previous, newState);
         }
 
+        /// <summary>Re-applies the time scale for the current state (after changing SpeedMultiplier).</summary>
+        public void RefreshTimeScale()
+        {
+            Time.timeScale = TimeScaleFor(State);
+        }
+
         static float TimeScaleFor(GameState state)
         {
             switch (state)
             {
                 case GameState.Menu:
                 case GameState.Playing:
-                    return 1f;
+                    return SpeedMultiplier;
                 default:
                     return 0f;
             }

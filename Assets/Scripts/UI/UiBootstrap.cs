@@ -43,6 +43,8 @@ namespace Cellstorm.UI
                 AddIfMissing<PauseMenu>(go);
                 AddIfMissing<RunSummaryScreen>(go);
                 AddIfMissing<RunRecorder>(go);
+                AddIfMissing<PerfMonitor>(go);
+                AddIfMissing<BalanceBot>(go);
             }
         }
 

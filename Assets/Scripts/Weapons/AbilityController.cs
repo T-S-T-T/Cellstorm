@@ -48,6 +48,9 @@ namespace Cellstorm.Weapons
         Material _material;
 
         public SwarmStats Stats => _stats;
+
+        /// <summary>Balance bot: read the player's slots from SetAiHeld instead of the keyboard.</summary>
+        public bool BotControlled { get; set; }
         public IAbilityHost Host
         {
             get
@@ -68,7 +71,7 @@ namespace Cellstorm.Weapons
                 if (!_styleBuilt)
                 {
                     _styleBuilt = true;
-                    if (_material == null) _material = new Material(Shader.Find("Sprites/Default"));
+                    _material = SpriteMaterials.Default;
                     _style = new CellStyle { color = Color.white, material = _material };
 
                     if (TryGetComponent<SwarmVisual>(out var sv))
@@ -123,7 +126,6 @@ namespace Cellstorm.Weapons
         {
             if (_stats != null) _stats.Died -= CancelAll;
             CancelAll();
-            if (_material != null) Destroy(_material);
         }
 
         /// <summary>Put a weapon or skill in a slot. A weapon already in another slot is moved here.</summary>
@@ -216,7 +218,7 @@ namespace Cellstorm.Weapons
 
         AbilityInput ReadInput(int slot)
         {
-            if (_isPlayer)
+            if (_isPlayer && !BotControlled)
             {
                 InputAction a;
                 switch (slot)

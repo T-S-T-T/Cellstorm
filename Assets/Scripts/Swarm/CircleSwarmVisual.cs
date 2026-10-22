@@ -4,8 +4,8 @@ using UnityEngine;
 namespace Cellstorm.Swarm
 {
     /// <summary>
-    /// Simple stand-in look for non-player swarms: one circle sized by cell count, darker when hurt.
-    /// Enemies get the metaball look in Phase 7 (or earlier if you want).
+    /// Simple look for non-player swarms: one circle sized by cell count, darker when hurt, and a short white
+    /// flash when it takes damage.
     /// </summary>
     public class CircleSwarmVisual : MonoBehaviour
     {
@@ -17,7 +17,7 @@ namespace Cellstorm.Swarm
         CircleCollider2D _col;
         SpriteRenderer _sr;
         Transform _spriteT;
-        Material _mat;
+        float _flash;
 
         public void SetColor(Color c)
         {
@@ -35,22 +35,28 @@ namespace Cellstorm.Swarm
             go.transform.SetParent(transform, false);
             _spriteT = go.transform;
 
-            _mat = new Material(Shader.Find("Sprites/Default"));
             _sr = go.AddComponent<SpriteRenderer>();
             _sr.sprite = ProceduralSprites.Hard;
-            _sr.sharedMaterial = _mat;
+            _sr.sharedMaterial = SpriteMaterials.Default;
             _sr.sortingOrder = sortingOrder;
 
+            _stats.Damaged += OnDamaged;
             Apply();
         }
 
         void OnDestroy()
         {
-            if (_mat != null) Destroy(_mat);
+            if (_stats != null) _stats.Damaged -= OnDamaged;
+        }
+
+        void OnDamaged(int amount)
+        {
+            _flash = 0.12f;
         }
 
         void Update()
         {
+            if (_flash > 0f) _flash -= Time.deltaTime;
             Apply();
         }
 
@@ -64,7 +70,8 @@ namespace Cellstorm.Swarm
 
             float frac = Mathf.Clamp01((float)cells / _stats.MaxCells);
             var dark = new Color(color.r * 0.45f, color.g * 0.45f, color.b * 0.45f, 1f);
-            _sr.color = Color.Lerp(dark, color, frac);
+            var c = Color.Lerp(dark, color, frac);
+            _sr.color = _flash > 0f ? Color.Lerp(c, Color.white, 0.8f) : c;
         }
     }
 }

@@ -25,6 +25,31 @@ namespace Cellstorm.Progression
         StatBlockSO[] _active;
         GUIStyle _title, _name, _small;
 
+        public static RunSetup Instance { get; private set; }
+
+        void Awake()
+        {
+            Instance = this;
+        }
+
+        void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
+        /// <summary>Balance bot: pick the loadout at 'index' (Default if it is locked).</summary>
+        public bool BotChoose(int index)
+        {
+            var gm = GameManager.Instance;
+            if (gm == null || gm.State != GameState.LoadoutSelect || _active == null || _player == null) return false;
+            index = Mathf.Clamp(index, 0, _active.Length - 1);
+            var b = _active[index];
+            if (!UnlockState.IsUnlocked(UnlockIdFor(b))) b = _active[0];
+            Apply(b);
+            gm.SetState(GameState.Playing);
+            return true;
+        }
+
         void Start()
         {
             _player = FindAnyObjectByType<SwarmBody>();

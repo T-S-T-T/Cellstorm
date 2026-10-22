@@ -5,6 +5,7 @@ using Cellstorm.Debugging;
 using Cellstorm.Enemies;
 using Cellstorm.Meta;
 using Cellstorm.Progression;
+using Cellstorm.Swarm;
 using Cellstorm.Weapons;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -24,9 +25,50 @@ namespace Cellstorm.UI
 
         readonly string[] _keys = new string[AbilityController.SlotCount];
         float _nextKeyRefresh;
+        SwarmStats _hooked;
+        float _hurtFlash;
+        string _banner = "";
+        float _bannerUntil;
+
+        void OnEnable()
+        {
+            RunDirector.MilestoneReached += OnMilestone;
+        }
+
+        void OnDisable()
+        {
+            RunDirector.MilestoneReached -= OnMilestone;
+        }
+
+        void OnDestroy()
+        {
+            if (_hooked != null) _hooked.Damaged -= OnPlayerDamaged;
+        }
+
+        void OnPlayerDamaged(int amount)
+        {
+            _hurtFlash = Mathf.Clamp01(0.4f + amount * 0.05f);
+            CameraFollow.Shake(Mathf.Clamp(0.1f + amount * 0.04f, 0.1f, 0.5f));
+        }
+
+        void OnMilestone(int milestone)
+        {
+            _banner = "BOSS " + milestone + " APPROACHES";
+            _bannerUntil = Time.unscaledTime + 3f;
+            CameraFollow.Shake(0.4f);
+        }
 
         void Update()
         {
+            var pb = PlayerBuild.Instance;
+            if (pb != null && pb.Stats != null && _hooked != pb.Stats)
+            {
+                if (_hooked != null) _hooked.Damaged -= OnPlayerDamaged;
+                _hooked = pb.Stats;
+                _hooked.Damaged += OnPlayerDamaged;
+            }
+            _hurtFlash = Mathf.Max(0f, _hurtFlash - Time.unscaledDeltaTime * 2.5f);
+
             var kb = Keyboard.current;
             if (kb != null)
             {
@@ -64,6 +106,8 @@ namespace Cellstorm.UI
             var abilities = build.Abilities;
 
             if (swap) UiDraw.Dim(0.35f);
+            if (_hurtFlash > 0.001f)
+                UiDraw.Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.9f, 0.1f, 0.1f, 0.28f * _hurtFlash));
 
             DrawHeart(stats);
             DrawDef(stats);
@@ -73,7 +117,11 @@ namespace Cellstorm.UI
             DrawTimer(boss ? 62f : 14f);
             DrawTopLeft(gm);
 
+            if (Time.unscaledTime < _bannerUntil)
+                GUI.Label(new Rect(0f, Screen.height * 0.2f, Screen.width, 64f), _banner, UiStyles.Title);
+
             if (swap) DrawSwapOverlay(abilities);
+            else DrawSlotTooltip(abilities);
         }
 
         // ---------------- Heart, DEF ----------------
@@ -249,6 +297,29 @@ namespace Cellstorm.UI
             string note = "F12: debug text";
             if (UnlockState.UnlockEverything) note += "   [ALL UNLOCKED - F11]";
             GUI.Label(new Rect(14f, 52f, 400f, 20f), note, UiStyles.Small);
+        }
+
+        void DrawSlotTooltip(AbilityController abilities)
+        {
+            var mouse = Mouse.current;
+            if (mouse == null || abilities == null) return;
+            Vector2 p = mouse.position.ReadValue();
+            var gui = new Vector2(p.x, Screen.height - p.y);
+
+            for (int i = 0; i < AbilityController.SlotCount; i++)
+            {
+                var r = HudLayout.Slot(i);
+                if (!r.Contains(gui)) continue;
+                var a = abilities.GetSlot(i);
+                if (a == null) return;
+
+                string text = a.Data.displayName + "\n" + a.Data.description + "\nCooldown " + a.Data.cooldown.ToString("0.#") + "s" +
+                              (a.Data.shapeTime > 0f ? "   Shape time " + a.Data.shapeTime.ToString("0.#") + "s" : "");
+                var box = new Rect(Mathf.Clamp(r.center.x - 160f, 8f, Screen.width - 328f), r.y - 104f, 320f, 96f);
+                UiDraw.Fill(box, new Color(0f, 0f, 0f, 0.78f));
+                GUI.Label(new Rect(box.x + 8f, box.y + 4f, box.width - 16f, box.height - 8f), text, UiStyles.SmallCenter);
+                return;
+            }
         }
 
         // ---------------- Swap mode ----------------

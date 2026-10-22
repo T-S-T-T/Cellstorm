@@ -10,6 +10,9 @@ namespace Cellstorm.Meta
     {
         public const int MaxLeaderboard = 20;
 
+        /// <summary>While true, runs are not recorded (the balance bot plays without touching your save).</summary>
+        public static bool Suspended { get; set; }
+
         static SaveData _data;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -75,7 +78,7 @@ namespace Cellstorm.Meta
         public static List<string> RecordRun(RunRecord run)
         {
             var newlyUnlocked = new List<string>();
-            if (run == null) return newlyUnlocked;
+            if (run == null || Suspended) return newlyUnlocked;
             if (run.score <= 0 && run.runTime < 10f) return newlyUnlocked;
 
             var d = Data;

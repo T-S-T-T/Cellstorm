@@ -205,6 +205,11 @@ namespace Cellstorm.Combat
         public void ApplyDamageOverTime(float cellsPerSecond, float dt)
         {
             if (IsDead || cellsPerSecond <= 0f || dt <= 0f) return;
+            if (Invulnerable)
+            {
+                _damageAcc = 0f;
+                return;
+            }
 
             _damageAcc += cellsPerSecond * dt;
             int whole = (int)_damageAcc;
