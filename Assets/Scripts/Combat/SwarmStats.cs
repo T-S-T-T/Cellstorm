@@ -35,6 +35,9 @@ namespace Cellstorm.Combat
 
         public bool IsDead { get; private set; }
 
+        /// <summary>Test helper (god mode): ignores all damage while true.</summary>
+        public bool Invulnerable { get; set; }
+
         public int Cells { get { EnsureInitialized(); return _cells; } }
         public int MaxCells => Mathf.Max(1, Mathf.RoundToInt(Get(StatType.MaxCells)));
         public float CellRegen => Get(StatType.CellRegen);
@@ -185,7 +188,7 @@ namespace Cellstorm.Combat
         /// <summary>Remove cells immediately. Returns the amount actually removed.</summary>
         public int TakeDamage(int amount)
         {
-            if (IsDead || amount <= 0) return 0;
+            if (IsDead || Invulnerable || amount <= 0) return 0;
 
             int dealt = Mathf.Min(amount, _cells);
             SetCellsInternal(_cells - dealt);
