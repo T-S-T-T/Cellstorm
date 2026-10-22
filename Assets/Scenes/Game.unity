@@ -132,6 +132,8 @@ GameObject:
   - component: {fileID: 5691941}
   - component: {fileID: 5691940}
   - component: {fileID: 5691939}
+  - component: {fileID: 5691943}
+  - component: {fileID: 5691942}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -216,13 +218,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6105e1c926f1974cad5b901afe65f1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Swarm.SwarmBody
-  cellCount: 5
   radiusPerSqrtCell: 0.15
   radiusSmoothing: 6
-  speedStat: 2
   unitsPerSpeedPoint: 2.5
   acceleration: 16
   deceleration: 7
+  knockbackDecay: 20
+  maxKnockbackSpeed: 12
   turnRateDegPerSec: 360
 --- !u!58 &5691941
 CircleCollider2D:
@@ -260,6 +262,38 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
+--- !u!114 &5691942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5691934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8ee0e677bd14294ba13ba618c3e0e22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Combat.SwarmCombat
+  faction: 0
+  bounceSpeed: 6
+  dentStrength: 4
+--- !u!114 &5691943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5691934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dba4ce6fb05d9a4fae6b31961c1bb9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Combat.SwarmStats
+  statBlock: {fileID: 0}
+  baseMaxCells: 5
+  baseCellRegen: 1
+  baseDefense: 2
+  baseSpeed: 2
 --- !u!1 &142513647
 GameObject:
   m_ObjectHideFlags: 0
@@ -618,6 +652,51 @@ MonoBehaviour:
   minOrthoSize: 5
   orthoPerRadius: 2.6
   zoomSharpness: 3
+--- !u!1 &1073886884
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1073886886}
+  - component: {fileID: 1073886885}
+  m_Layer: 0
+  m_Name: CombatDebug
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1073886885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1073886884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9211f7ec5ebbd4b4da82eaf95f15a8f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Debugging.CombatDebug
+  player: {fileID: 0}
+--- !u!4 &1073886886
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1073886884}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -628,3 +707,4 @@ SceneRoots:
   - {fileID: 5691938}
   - {fileID: 877215482}
   - {fileID: 142513649}
+  - {fileID: 1073886886}
