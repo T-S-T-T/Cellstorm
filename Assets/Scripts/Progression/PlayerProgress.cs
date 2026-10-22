@@ -91,7 +91,7 @@ namespace Cellstorm.Progression
             var gm = GameManager.Instance;
             if (gm == null || !gm.IsPlaying || PendingLevelUps <= 0) return;
 
-            if (_build == null) _build = FindFirstObjectByType<PlayerBuild>();
+            if (_build == null) _build = FindAnyObjectByType<PlayerBuild>();
             if (_build == null || _build.Stats.IsDead) return;
 
             _lastOptions.Clear();

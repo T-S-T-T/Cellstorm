@@ -25,7 +25,7 @@ namespace Cellstorm.Progression
 
         void Start()
         {
-            _player = FindFirstObjectByType<SwarmBody>();
+            _player = FindAnyObjectByType<SwarmBody>();
             _active = loadouts != null && loadouts.Length > 0 ? loadouts : LoadoutDefaults.CreateAll();
             if (_player == null) return;
 

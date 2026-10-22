@@ -114,7 +114,7 @@ namespace Cellstorm.Progression
                 _sr.color = new Color(_color.r, _color.g, _color.b, a);
             }
 
-            if (_player == null) _player = FindFirstObjectByType<SwarmBody>();
+            if (_player == null) _player = FindAnyObjectByType<SwarmBody>();
             if (_player == null || _player.IsDead) return;
 
             Vector2 pos = transform.position;

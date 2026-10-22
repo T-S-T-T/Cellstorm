@@ -16,7 +16,7 @@ namespace Cellstorm.Debugging
 
         void Start()
         {
-            _player = FindFirstObjectByType<SwarmBody>();
+            _player = FindAnyObjectByType<SwarmBody>();
         }
 
         void Update()

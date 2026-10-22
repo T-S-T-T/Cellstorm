@@ -15,7 +15,7 @@ namespace Cellstorm.EditorTools
         [MenuItem("Cellstorm/Phase 5/Setup Game Scene")]
         public static void SetupScene()
         {
-            var body = Object.FindFirstObjectByType<SwarmBody>();
+            var body = Object.FindAnyObjectByType<SwarmBody>();
             if (body == null)
             {
                 EditorUtility.DisplayDialog("Cellstorm",
