@@ -134,6 +134,8 @@ GameObject:
   - component: {fileID: 5691939}
   - component: {fileID: 5691943}
   - component: {fileID: 5691942}
+  - component: {fileID: 5691944}
+  - component: {fileID: 5691945}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -294,6 +296,36 @@ MonoBehaviour:
   baseCellRegen: 1
   baseDefense: 2
   baseSpeed: 2
+--- !u!114 &5691944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5691934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5e24de1ff4c6b4cbe5f6af3ac6124f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Weapons.AbilityController
+  startingLoadout:
+  - {fileID: 11400000, guid: 186fefa1aff215347b8202e78c1ab54b, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  equipRamIfEmpty: 1
+--- !u!114 &5691945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5691934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6844db3d26d10fa44978e9788d19da75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Progression.PlayerBuild
 --- !u!1 &142513647
 GameObject:
   m_ObjectHideFlags: 0
@@ -465,6 +497,54 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 806239285}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &812370359
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 812370361}
+  - component: {fileID: 812370360}
+  m_Layer: 0
+  m_Name: AbilityDebug
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &812370360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 812370359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1d849285dfcd77479b5a83e1822ce56, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Debugging.AbilityDebug
+  ram: {fileID: 11400000, guid: 186fefa1aff215347b8202e78c1ab54b, type: 2}
+  jaw: {fileID: 11400000, guid: 8339765e78b647e41ab419f162b7e484, type: 2}
+  gun: {fileID: 11400000, guid: 7761d18900c0ad4488f23edb08e3fe92, type: 2}
+  hardening: {fileID: 11400000, guid: a84d1aca1c7c7ce458e0cc4655182923, type: 2}
+--- !u!4 &812370361
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 812370359}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -742,6 +822,115 @@ MonoBehaviour:
   minOrthoSize: 5
   orthoPerRadius: 2.6
   zoomSharpness: 3
+--- !u!1 &980064911
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 980064917}
+  - component: {fileID: 980064916}
+  - component: {fileID: 980064915}
+  - component: {fileID: 980064914}
+  - component: {fileID: 980064913}
+  - component: {fileID: 980064912}
+  m_Layer: 0
+  m_Name: Progression
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &980064912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 980064911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b17f36945c3ca5e49a4e31119ce33766, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Debugging.ProgressDebug
+--- !u!114 &980064913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 980064911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9288b7d95d97ec44b05c0e2f176307b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Progression.RunSetup
+  loadouts:
+  - {fileID: 11400000, guid: ee0a73ee7d854b24b971d54de59ce7ee, type: 2}
+  - {fileID: 11400000, guid: 88e34581a6cf0d644804fe246966028c, type: 2}
+  - {fileID: 11400000, guid: 76f458924e24b9a4793f9bf8792c86a9, type: 2}
+  skipPicker: 0
+--- !u!114 &980064914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 980064911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e0f9187a78b48c4da551793ae4e7f9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.UI.LevelUpScreen
+--- !u!114 &980064915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 980064911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb79cf0444521d34e837ab89ad789286, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Progression.PickupDropper
+  rerollChance: 0.01
+  shellsChance: 0.02
+  bossAlwaysDropsShells: 1
+  maxPickups: 300
+--- !u!114 &980064916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 980064911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 311ad2ddee84cc14aaa3dc63286cf7d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Progression.PlayerProgress
+  pool: {fileID: 11400000, guid: 62a692fede340cc40a4b5a9a7f41e24a, type: 2}
+  optionCount: 3
+  firstLevelExp: 10
+  levelGrowth: 1.1
+--- !u!4 &980064917
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 980064911}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1073886884
 GameObject:
   m_ObjectHideFlags: 0
@@ -825,7 +1014,10 @@ MonoBehaviour:
   defensePerMilestone: 1.5
   bossSpeed: 5
   bossColor: {r: 0.8, g: 0.25, b: 0.85, a: 1}
-  bossWeapons: []
+  bossWeapons:
+  - {fileID: 11400000, guid: 186fefa1aff215347b8202e78c1ab54b, type: 2}
+  - {fileID: 11400000, guid: 8339765e78b647e41ab419f162b7e484, type: 2}
+  - {fileID: 11400000, guid: f98b4b4520451484b8007c732e9f3129, type: 2}
 --- !u!4 &1843373801
 Transform:
   m_ObjectHideFlags: 0
@@ -855,3 +1047,5 @@ SceneRoots:
   - {fileID: 773533601}
   - {fileID: 1843373801}
   - {fileID: 806239287}
+  - {fileID: 812370361}
+  - {fileID: 980064917}
