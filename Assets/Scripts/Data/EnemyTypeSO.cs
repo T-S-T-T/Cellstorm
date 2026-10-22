@@ -38,6 +38,10 @@ namespace Cellstorm.Data
         [Tooltip("Flat cells removed from the player. Ignores DEF for now (the GDD leaves this open).")]
         [Min(0)] public int explosionDamage = 2;
 
+        [Header("Weapon")]
+        [Tooltip("Optional weapon this enemy uses (slot 0). Ranged cell: the Enemy Gun.")]
+        public WeaponSO weapon;
+
         [Header("Rewards")]
         public int scoreValue = 1;
         [Tooltip("If true, score = scoreValue x max cells (GDD: multi 1/cell, ranged 2/cell).")]

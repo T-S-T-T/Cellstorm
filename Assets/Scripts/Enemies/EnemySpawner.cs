@@ -30,6 +30,8 @@ namespace Cellstorm.Enemies
         [SerializeField] float defensePerMilestone = 1.5f;
         [SerializeField] float bossSpeed = 5f;
         [SerializeField] Color bossColor = new Color(0.80f, 0.25f, 0.85f, 1f);
+        [Tooltip("Each boss picks one of these at random. Empty = built-in Ram, Jaw and Enemy Gun.")]
+        [SerializeField] WeaponSO[] bossWeapons;
 
         float[] _accumulators = new float[0];
         float _nextSweep;
@@ -123,6 +125,8 @@ namespace Cellstorm.Enemies
         void SpawnBoss(int n)
         {
             int maxCells = n * cellsPerMilestone;
+            WeaponSO weapon = PickBossWeapon();
+            bool ranged = weapon != null && weapon.type == WeaponType.Gun;
             var spec = new EnemySpec
             {
                 name = "Boss " + n,
@@ -131,7 +135,9 @@ namespace Cellstorm.Enemies
                 regen = maxCells / regenDivisor,
                 defense = Mathf.Floor(n * defensePerMilestone),
                 speed = bossSpeed,
-                behavior = EnemyBehavior.Chase, // Phase 4: random weapon; ranged weapon uses KeepDistance
+                behavior = ranged ? EnemyBehavior.KeepDistance : EnemyBehavior.Chase,
+                preferredRange = 6f,
+                weapon = weapon,
                 scoreValue = 10,
                 scorePerCell = true,
                 expValue = 50 * n, // PLACEHOLDER
@@ -139,6 +145,21 @@ namespace Cellstorm.Enemies
                 milestone = n
             };
             Enemy.Create(spec, RandomRingPosition());
+        }
+
+        WeaponSO PickBossWeapon()
+        {
+            if (bossWeapons != null && bossWeapons.Length > 0)
+            {
+                var w = bossWeapons[Random.Range(0, bossWeapons.Length)];
+                if (w != null) return w;
+            }
+            switch (Random.Range(0, 3))
+            {
+                case 0: return WeaponDefaults.Ram;
+                case 1: return WeaponDefaults.Jaw;
+                default: return WeaponDefaults.EnemyGun;
+            }
         }
 
         Vector2 RandomRingPosition()

@@ -1,6 +1,7 @@
 using System;
 using Cellstorm.Combat;
 using Cellstorm.Core;
+using Cellstorm.Weapons;
 using UnityEngine;
 
 namespace Cellstorm.Swarm
@@ -10,7 +11,7 @@ namespace Cellstorm.Swarm
     /// knockback, and a turn-rate limited aim direction. Cells, DEF and speed now come from SwarmStats.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D), typeof(SwarmStats))]
-    public class SwarmBody : MonoBehaviour, IKnockbackable
+    public class SwarmBody : MonoBehaviour, IAbilityHost
     {
         [Header("Size")]
         [Tooltip("Radius = this * sqrt(cells). 5 cells ~ 0.34, 50 ~ 1.06, 500 ~ 3.4")]

@@ -24,6 +24,8 @@ namespace Cellstorm.Swarm
             color = c;
         }
 
+        public Color Color => color;
+
         void Awake()
         {
             _stats = GetComponent<SwarmStats>();

@@ -51,6 +51,8 @@ namespace Cellstorm.Swarm
         int _active = -1;
 
         public int ActiveVisualCells => Mathf.Max(0, _active);
+        public Color Color => color;
+        public int MetaballLayerIndex => _layer;
 
         void Awake()
         {

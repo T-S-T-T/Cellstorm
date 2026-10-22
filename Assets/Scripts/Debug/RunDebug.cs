@@ -120,7 +120,7 @@ namespace Cellstorm.Debugging
             GUI.color = old;
 
             GUI.Label(new Rect(x, y + h + 2f, w, 22f),
-                $"{boss.name}   {boss.Stats.Cells}/{boss.Stats.MaxCells}   DEF {boss.Stats.Defense:F0}", _center);
+                boss.name + (boss.Spec.weapon != null ? " [" + boss.Spec.weapon.displayName + "]" : "") + $"   {boss.Stats.Cells}/{boss.Stats.MaxCells}   DEF {boss.Stats.Defense:F0}", _center);
         }
     }
 }

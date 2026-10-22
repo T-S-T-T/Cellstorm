@@ -16,6 +16,7 @@ namespace Cellstorm.Enemies
 
         public EnemyBehavior behavior;
         public float preferredRange;
+        public WeaponSO weapon;
 
         public float explosionTriggerRange;
         public float explosionRadius;
@@ -41,6 +42,7 @@ namespace Cellstorm.Enemies
                 speed = t.speed,
                 behavior = t.behavior,
                 preferredRange = t.preferredRange,
+                weapon = t.weapon,
                 explosionTriggerRange = t.explosionTriggerRange,
                 explosionRadius = t.explosionRadius,
                 explosionDamage = t.explosionDamage,

@@ -94,7 +94,7 @@ namespace Cellstorm.Combat
             else _rb.linearVelocity += velocity;
         }
 
-        void ReactToHit(Vector2 worldPoint)
+        public void ReactToHit(Vector2 worldPoint)
         {
             if (_visual == null || Time.time < _nextDentTime) return;
             _nextDentTime = Time.time + 0.25f;

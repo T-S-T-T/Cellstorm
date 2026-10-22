@@ -39,7 +39,7 @@ namespace Cellstorm.Debugging
             if (kb.equalsKey.wasPressedThisFrame) body.SetCellCount(body.CellCount * 2);
             if (kb.minusKey.wasPressedThisFrame) body.SetCellCount(body.CellCount / 2);
 
-            if (_visual != null && InputService.Attack1.WasPressedThisFrame())
+            if (_visual != null && kb.backquoteKey.wasPressedThisFrame)
             {
                 Vector2 hit = (Vector2)body.transform.position + body.AimDirection * body.SmoothedRadius;
                 _visual.Dent(hit);
@@ -53,7 +53,7 @@ namespace Cellstorm.Debugging
             GUI.Label(new Rect(10, 35, 800, 25),
                 $"Cells: {body.CellCount}  (simulated dots: {visual})   Radius: {body.Radius:F2}   FPS: {_fps:F0}");
             GUI.Label(new Rect(10, 55, 800, 25),
-                "1/2/3/4/5 = 5/50/500/2000/10000 cells   = / - = double / halve   LMB = dent");
+                "1/2/3/4/5 = 5/50/500/2000/10000 cells   = / - = double / halve   ` (backtick) = dent");
         }
     }
 }
