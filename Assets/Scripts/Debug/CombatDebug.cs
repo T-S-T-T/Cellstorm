@@ -64,12 +64,12 @@ namespace Cellstorm.Debugging
             if (kb.bKey.wasPressedThisFrame)
             {
                 _chase = !_chase;
-                foreach (var b in FindObjectsByType<DebugEnemyBrain>(FindObjectsSortMode.None)) b.Chase = _chase;
+                foreach (var b in FindObjectsByType<DebugEnemyBrain>()) b.Chase = _chase;
             }
 
             if (kb.kKey.wasPressedThisFrame)
             {
-                foreach (var b in FindObjectsByType<DebugEnemyBrain>(FindObjectsSortMode.None)) Destroy(b.gameObject);
+                foreach (var b in FindObjectsByType<DebugEnemyBrain>()) Destroy(b.gameObject);
             }
 
             if (kb.hKey.wasPressedThisFrame) stats.SetCells(stats.MaxCells);
@@ -113,7 +113,7 @@ namespace Cellstorm.Debugging
             _nearest = null;
             _nearestName = "-";
             float best = float.MaxValue;
-            foreach (var b in FindObjectsByType<DebugEnemyBrain>(FindObjectsSortMode.None))
+            foreach (var b in FindObjectsByType<DebugEnemyBrain>())
             {
                 float d = ((Vector2)b.transform.position - (Vector2)player.transform.position).sqrMagnitude;
                 if (d < best)
