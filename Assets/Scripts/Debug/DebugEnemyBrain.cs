@@ -11,7 +11,6 @@ namespace Cellstorm.Debugging
     [RequireComponent(typeof(Rigidbody2D), typeof(SwarmStats))]
     public class DebugEnemyBrain : MonoBehaviour, IKnockbackable
     {
-        [SerializeField] float unitsPerSpeedPoint = 2.5f;
         [SerializeField] float knockbackDecay = 20f;
         [SerializeField] float maxKnockbackSpeed = 12f;
 
@@ -49,7 +48,7 @@ namespace Cellstorm.Debugging
             {
                 Vector2 to = (Vector2)_target.position - (Vector2)transform.position;
                 if (to.sqrMagnitude > 0.0001f)
-                    velocity = to.normalized * (_stats.Speed * unitsPerSpeedPoint);
+                    velocity = to.normalized * (SpeedMath.MoveSpeed(_stats.Speed));
             }
 
             _knockback = Vector2.MoveTowards(_knockback, Vector2.zero, knockbackDecay * Time.fixedDeltaTime);

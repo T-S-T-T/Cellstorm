@@ -285,7 +285,7 @@ namespace Cellstorm.Debugging
         {
             if (_abilities == null) return;
 
-            float hp = _body.Stats.Cells / (float)Mathf.Max(1, _body.Stats.MaxCells);
+            float hp = _body.Stats.Hp / Mathf.Max(1f, _body.Stats.MaxHp);
             bool aligned = hasTarget && Vector2.Angle(_body.AimDirection, toTarget) < 10f;
 
             for (int slot = 0; slot < AbilityController.SlotCount; slot++)
@@ -336,7 +336,7 @@ namespace Cellstorm.Debugging
             var sb = new StringBuilder();
 
             if (!File.Exists(LogPath))
-                File.AppendAllText(LogPath, "time,run,policy,loadout,outcome,seconds,milestone,score,levelups,kills,max_cells,defense,speed,regen,weapons\n");
+                File.AppendAllText(LogPath, "time,run,policy,loadout,outcome,seconds,milestone,score,levelups,kills,max_hp,defense,speed,regen,weapons\n");
 
             sb.Append(System.DateTime.Now.ToString("HH:mm:ss")).Append(',');
             sb.Append(_runIndex + 1).Append(',');
@@ -352,8 +352,8 @@ namespace Cellstorm.Debugging
             if (build != null && build.Stats != null)
             {
                 var s = build.Stats;
-                sb.Append(s.MaxCells).Append(',').Append(s.Defense.ToString("0.#")).Append(',');
-                sb.Append(s.Speed.ToString("0.#")).Append(',').Append(s.CellRegen.ToString("0.#")).Append(',');
+                sb.Append(s.MaxHp.ToString("0")).Append(',').Append(s.Defense.ToString("0.#")).Append(',');
+                sb.Append(s.Speed.ToString("0.#")).Append(',').Append(s.HpRegen.ToString("0.#")).Append(',');
                 sb.Append(Describe(build.Abilities));
             }
             else

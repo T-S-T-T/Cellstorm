@@ -6,31 +6,31 @@ using UnityEngine;
 namespace Cellstorm.Combat
 {
     /// <summary>
-    /// Stats and health for any swarm (player, enemies, bosses). Cells are the health.
-    /// Base values come from an optional StatBlockSO (loadouts, enemy types) or the inline fields.
+    /// Stats and health for any swarm (player, enemies, bosses). HP is a float: Hp (current), MaxHp, HpRegen,
+    /// plus DEF and Speed. Base values come from an optional StatBlockSO (loadouts) or the inline fields.
     /// Temporary effects go through AddModifier; permanent upgrades through AddToBase.
+    /// Damage goes through TakeDamage(DamageInfo): DEF is applied once, here (GDD V0.1.1 section 4.3).
     /// </summary>
     [DefaultExecutionOrder(-50)]
-    public class SwarmStats : MonoBehaviour
+    public class SwarmStats : MonoBehaviour, IDamageable
     {
         [SerializeField] StatBlockSO statBlock;
 
         [Header("Base stats (used when no Stat Block is assigned)")]
-        [SerializeField, Min(1)] float baseMaxCells = 5f;
-        [SerializeField, Min(0)] float baseCellRegen = 1f;
+        [SerializeField, Min(1)] float baseMaxHp = 100f;
+        [SerializeField, Min(0)] float baseHpRegen = 1f;
         [SerializeField, Min(0)] float baseDefense = 2f;
         [SerializeField, Min(0)] float baseSpeed = 2f;
 
         readonly List<StatModifier> _mods = new List<StatModifier>();
-        int _cells;
-        float _regenAcc;
-        float _damageAcc;
+        float _hp;
+        float _heldHp;
         bool _initialized;
 
-        /// <summary>Raised whenever the current cell count changes (new count).</summary>
-        public event Action<int> CellsChanged;
-        /// <summary>Raised when cells are lost (amount actually lost).</summary>
-        public event Action<int> Damaged;
+        /// <summary>Raised whenever the current HP changes (new HP).</summary>
+        public event Action<float> HpChanged;
+        /// <summary>Raised when HP is lost (amount actually lost, after DEF).</summary>
+        public event Action<float> Damaged;
         public event Action Died;
 
         public bool IsDead { get; private set; }
@@ -38,11 +38,16 @@ namespace Cellstorm.Combat
         /// <summary>Test helper (god mode): ignores all damage while true.</summary>
         public bool Invulnerable { get; set; }
 
-        public int Cells { get { EnsureInitialized(); return _cells; } }
-        public int MaxCells => Mathf.Max(1, Mathf.RoundToInt(Get(StatType.MaxCells)));
-        public float CellRegen => Get(StatType.CellRegen);
+        public float Hp { get { EnsureInitialized(); return _hp; } }
+        public float MaxHp => Mathf.Max(1f, Get(StatType.MaxHp));
+        public float HpRegen => Get(StatType.HpRegen);
         public float Defense => Get(StatType.Defense);
         public float Speed => Get(StatType.Speed);
+
+        /// <summary>HP currently held by deployed weapon cells (V0.1.1 Phase 4). Always 0 until then.</summary>
+        public float HeldHp => _heldHp;
+        /// <summary>HP of the body itself: Hp minus what the weapon cells hold.</summary>
+        public float BodyHp => Mathf.Max(0f, Hp - _heldHp);
 
         public float BaseDefense { get { EnsureInitialized(); return baseDefense; } }
         public int ModifierCount => _mods.Count;
@@ -59,26 +64,27 @@ namespace Cellstorm.Combat
 
             if (statBlock != null)
             {
-                baseMaxCells = statBlock.maxCells;
-                baseCellRegen = statBlock.cellRegen;
+                baseMaxHp = statBlock.maxHp;
+                baseHpRegen = statBlock.hpRegen;
                 baseDefense = statBlock.defense;
                 baseSpeed = statBlock.speed;
             }
-            _cells = Mathf.Max(1, Mathf.RoundToInt(baseMaxCells));
+            _hp = Mathf.Max(1f, baseMaxHp);
         }
 
-        /// <summary>Set base stats from code (used for enemies created at runtime).</summary>
-        public void Configure(int maxCells, float regen, float defense, float speed, int startCells = -1)
+        /// <summary>Set base stats from code (used for enemies created at runtime and by the loadout picker).</summary>
+        public void Configure(float maxHp, float regen, float defense, float speed, float startHp = -1f)
         {
             EnsureInitialized();
-            baseMaxCells = Mathf.Max(1, maxCells);
-            baseCellRegen = Mathf.Max(0f, regen);
+            baseMaxHp = Mathf.Max(1f, maxHp);
+            baseHpRegen = Mathf.Max(0f, regen);
             baseDefense = Mathf.Max(0f, defense);
             baseSpeed = Mathf.Max(0f, speed);
             IsDead = false;
+            _heldHp = 0f;
 
-            int start = startCells >= 0 ? startCells : maxCells;
-            SetCellsInternal(Mathf.Clamp(start, 1, MaxCells));
+            float start = startHp >= 0f ? startHp : MaxHp;
+            SetHpInternal(Mathf.Clamp(start, 0.01f, MaxHp));
         }
 
         // ---------------- Stat calculation ----------------
@@ -103,8 +109,8 @@ namespace Cellstorm.Combat
         {
             switch (stat)
             {
-                case StatType.MaxCells: return baseMaxCells;
-                case StatType.CellRegen: return baseCellRegen;
+                case StatType.MaxHp: return baseMaxHp;
+                case StatType.HpRegen: return baseHpRegen;
                 case StatType.Defense: return baseDefense;
                 default: return baseSpeed;
             }
@@ -116,8 +122,8 @@ namespace Cellstorm.Combat
             EnsureInitialized();
             switch (stat)
             {
-                case StatType.MaxCells: baseMaxCells = Mathf.Max(1f, baseMaxCells + amount); break;
-                case StatType.CellRegen: baseCellRegen = Mathf.Max(0f, baseCellRegen + amount); break;
+                case StatType.MaxHp: baseMaxHp = Mathf.Max(1f, baseMaxHp + amount); break;
+                case StatType.HpRegen: baseHpRegen = Mathf.Max(0f, baseHpRegen + amount); break;
                 case StatType.Defense: baseDefense = Mathf.Max(0f, baseDefense + amount); break;
                 default: baseSpeed = Mathf.Max(0f, baseSpeed + amount); break;
             }
@@ -159,89 +165,97 @@ namespace Cellstorm.Combat
                 if (m.Remaining <= 0f) _mods.RemoveAt(i);
             }
 
-            int max = MaxCells;
-            if (_cells > max) SetCellsInternal(max);
-
-            float regen = CellRegen;
-            if (_cells < max && regen > 0f)
-            {
-                _regenAcc += regen * dt;
-                int whole = (int)_regenAcc;
-                if (whole > 0)
-                {
-                    _regenAcc -= whole;
-                    Heal(whole);
-                }
-            }
-            else
-            {
-                _regenAcc = 0f;
-            }
+            // Max HP can drop (Dense Cells): HP never stays above it.
+            float max = MaxHp;
+            if (_hp > max) SetHpInternal(max);
         }
 
-        public void Heal(int amount)
+        /// <summary>HP regen is applied every physics tick so the bar moves smoothly. Never above max HP.</summary>
+        void FixedUpdate()
         {
-            if (IsDead || amount <= 0) return;
-            SetCellsInternal(Mathf.Min(MaxCells, Cells + amount));
+            if (IsDead) return;
+            float regen = HpRegen;
+            if (regen <= 0f) return;
+
+            float max = MaxHp;
+            if (_hp >= max) return;
+            SetHpInternal(Mathf.Min(max, _hp + regen * Time.fixedDeltaTime));
         }
 
-        /// <summary>Remove cells immediately. Returns the amount actually removed.</summary>
-        public int TakeDamage(int amount)
+        public void Heal(float amount)
         {
-            if (IsDead || Invulnerable || amount <= 0) return 0;
+            if (IsDead || amount <= 0f) return;
+            SetHpInternal(Mathf.Min(MaxHp, Hp + amount));
+        }
 
-            int dealt = Mathf.Min(amount, _cells);
-            SetCellsInternal(_cells - dealt);
+        /// <summary>The one damage entry point: DEF reduces the hit once, here. Returns the HP actually lost.</summary>
+        public float TakeDamage(DamageInfo info)
+        {
+            if (IsDead || Invulnerable || info.amount <= 0f) return 0f;
+
+            float final = info.type == DamageType.True ? info.amount : DefCurve.Apply(info.amount, Defense);
+            return LoseHp(final);
+        }
+
+        /// <summary>Shortcut for a raw hit that DEF reduces (contact, explosions, test damage).</summary>
+        public float TakeDamage(float rawAmount, DamageType type = DamageType.Contact)
+        {
+            return TakeDamage(new DamageInfo(rawAmount, type, Faction.Enemy, transform.position));
+        }
+
+        /// <summary>HP loss that ignores DEF (cost of a lost weapon cell, debug kill).</summary>
+        public float TakeTrueDamage(float amount)
+        {
+            if (IsDead || Invulnerable || amount <= 0f) return 0f;
+            return LoseHp(amount);
+        }
+
+        float LoseHp(float amount)
+        {
+            float dealt = Mathf.Min(amount, _hp);
+            SetHpInternal(_hp - dealt);
             Damaged?.Invoke(dealt);
 
-            if (_cells <= 0) Die();
+            if (_hp <= 0.0001f) Die();
             return dealt;
         }
 
-        /// <summary>
-        /// Continuous damage (contact). Fractions are carried over between calls so a rate of
-        /// 5 cells/s removes 5 cells per second regardless of frame rate.
-        /// </summary>
-        public void ApplyDamageOverTime(float cellsPerSecond, float dt)
-        {
-            if (IsDead || cellsPerSecond <= 0f || dt <= 0f) return;
-            if (Invulnerable)
-            {
-                _damageAcc = 0f;
-                return;
-            }
-
-            _damageAcc += cellsPerSecond * dt;
-            int whole = (int)_damageAcc;
-            if (whole > 0)
-            {
-                _damageAcc -= whole;
-                TakeDamage(whole);
-            }
-        }
-
-        /// <summary>Clamped to 0..MaxCells. Setting 0 kills the swarm.</summary>
-        public void SetCells(int value)
+        /// <summary>Clamped to 0..MaxHp. Setting 0 kills the swarm.</summary>
+        public void SetHp(float value)
         {
             if (IsDead) return;
-            value = Mathf.Clamp(value, 0, MaxCells);
-            SetCellsInternal(value);
-            if (_cells <= 0) Die();
+            value = Mathf.Clamp(value, 0f, MaxHp);
+            SetHpInternal(value);
+            if (_hp <= 0.0001f) Die();
         }
 
-        /// <summary>Test helper: sets base max cells and current cells together.</summary>
-        public void DebugSetMaxAndCells(int value)
+        /// <summary>Test helper: sets base max HP and current HP together.</summary>
+        public void DebugSetMaxAndHp(float value)
         {
             EnsureInitialized();
-            baseMaxCells = Mathf.Max(1, value);
-            SetCells(Mathf.Max(1, value));
+            baseMaxHp = Mathf.Max(1f, value);
+            SetHp(baseMaxHp);
         }
 
-        void SetCellsInternal(int value)
+        /// <summary>Weapon cells (Phase 4) set this. Clamped so 0 &lt;= HeldHp &lt;= Hp.</summary>
+        public void SetHeldHp(float value)
         {
-            if (value == _cells) return;
-            _cells = value;
-            CellsChanged?.Invoke(_cells);
+            _heldHp = Mathf.Clamp(value, 0f, Hp);
+        }
+
+        /// <summary>Debug check of the GDD invariant 0 &lt;= HeldHp &lt;= Hp &lt;= MaxHp.</summary>
+        public bool InvariantsHold()
+        {
+            const float eps = 0.001f;
+            return _heldHp >= -eps && _heldHp <= Hp + eps && Hp <= MaxHp + eps;
+        }
+
+        void SetHpInternal(float value)
+        {
+            if (Mathf.Approximately(value, _hp)) return;
+            _hp = value;
+            if (_heldHp > _hp) _heldHp = _hp;
+            HpChanged?.Invoke(_hp);
         }
 
         void Die()

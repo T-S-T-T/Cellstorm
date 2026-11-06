@@ -5,24 +5,31 @@ using UnityEngine;
 namespace Cellstorm.Combat
 {
     /// <summary>
-    /// Contact combat for one swarm (GDD section 4.2). Each swarm handles only the damage IT deals:
-    /// while touching an opponent with lower DEF it removes cells from it every physics step.
-    /// Equal DEF: both bounce apart. Same faction: nothing happens.
+    /// Contact combat for one swarm. Each swarm handles only the damage IT deals: while touching a hostile
+    /// swarm it deals ContactDps (HP per second, applied every physics tick). The receiver applies its own DEF.
+    /// Same faction: nothing happens. There is no DEF comparison and no bounce any more; physical collisions stay.
+    ///
+    /// TEMPORARY (V0.1.1 Phase 1): the player's body deals TempPlayerContactDps to anything it touches so the game
+    /// stays playable. Phase 2 replaces it with the Ram dash window and removes this.
     /// </summary>
     [RequireComponent(typeof(SwarmStats), typeof(Rigidbody2D))]
     public class SwarmCombat : MonoBehaviour
     {
+        /// <summary>TEMPORARY (removed in Phase 2): HP per second the player's body deals by touching.</summary>
+        public const float TempPlayerContactDps = 30f;
+        public const float DefaultEnemyContactDps = 10f;
+
         [SerializeField] Faction faction = Faction.Player;
-        [Tooltip("Speed given to each swarm when two equal-DEF swarms collide (units/s).")]
-        [SerializeField] float bounceSpeed = 6f;
         [Tooltip("Strength of the visual dent when this swarm is hit (player swarm only).")]
         [SerializeField] float dentStrength = 4f;
 
         public Faction Faction => faction;
         public SwarmStats Stats { get; private set; }
 
+        /// <summary>HP per second this swarm deals to a hostile swarm it touches (before the target's DEF).</summary>
+        public float ContactDps { get; set; }
+
         Rigidbody2D _rb;
-        IKnockbackable _knockbackable;
         SwarmVisual _visual;
         float _nextDentTime;
 
@@ -30,8 +37,8 @@ namespace Cellstorm.Combat
         {
             Stats = GetComponent<SwarmStats>();
             _rb = GetComponent<Rigidbody2D>();
-            _knockbackable = GetComponent<IKnockbackable>();
             _visual = GetComponent<SwarmVisual>();
+            ContactDps = DefaultDpsFor(faction);
 
             // OnCollisionStay2D is not called for sleeping bodies, which would stop contact damage
             // whenever two swarms stand still against each other.
@@ -45,34 +52,26 @@ namespace Cellstorm.Combat
             if (Stats != null) Stats.Died -= OnDied;
         }
 
+        static float DefaultDpsFor(Faction f)
+        {
+            return f == Faction.Player ? TempPlayerContactDps : DefaultEnemyContactDps;
+        }
+
         public void SetFaction(Faction f)
         {
             faction = f;
-        }
-
-        void OnCollisionEnter2D(Collision2D c)
-        {
-            if (!TryGetOpponent(c, out var other)) return;
-
-            if (Mathf.Abs(Stats.Defense - other.Stats.Defense) < 0.001f)
-            {
-                Vector2 away = (Vector2)transform.position - (Vector2)other.transform.position;
-                if (away.sqrMagnitude < 0.0001f) away = Random.insideUnitCircle;
-                Knockback(away.normalized * bounceSpeed);
-            }
+            ContactDps = DefaultDpsFor(f);
         }
 
         void OnCollisionStay2D(Collision2D c)
         {
             if (!TryGetOpponent(c, out var other)) return;
-            if (Stats.IsDead) return;
+            if (Stats.IsDead || ContactDps <= 0f) return;
 
-            float dps = DamageCalculator.ContactDps(
-                Stats.Cells, Stats.Defense, other.Stats.Cells, other.Stats.Defense);
-            if (dps <= 0f) return;
-
-            other.Stats.ApplyDamageOverTime(dps, Time.fixedDeltaTime);
-            other.ReactToHit(c.GetContact(0).point);
+            Vector2 point = c.GetContact(0).point;
+            var hit = new DamageInfo(ContactDps * Time.fixedDeltaTime, DamageType.Contact, faction, point);
+            other.Stats.TakeDamage(hit);
+            other.ReactToHit(point);
         }
 
         bool TryGetOpponent(Collision2D c, out SwarmCombat other)
@@ -86,12 +85,6 @@ namespace Cellstorm.Combat
             }
             other = null;
             return false;
-        }
-
-        void Knockback(Vector2 velocity)
-        {
-            if (_knockbackable != null) _knockbackable.AddKnockback(velocity);
-            else _rb.linearVelocity += velocity;
         }
 
         public void ReactToHit(Vector2 worldPoint)
@@ -109,7 +102,6 @@ namespace Cellstorm.Combat
             }
             else
             {
-                // Phase 3: drop EXP, add score, spawn effects.
                 Destroy(gameObject);
             }
         }

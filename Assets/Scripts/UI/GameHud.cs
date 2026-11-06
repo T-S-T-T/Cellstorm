@@ -45,10 +45,11 @@ namespace Cellstorm.UI
             if (_hooked != null) _hooked.Damaged -= OnPlayerDamaged;
         }
 
-        void OnPlayerDamaged(int amount)
+        // Damage now arrives every physics tick (small amounts) as well as in big hits.
+        void OnPlayerDamaged(float amount)
         {
-            _hurtFlash = Mathf.Clamp01(0.4f + amount * 0.05f);
-            CameraFollow.Shake(Mathf.Clamp(0.1f + amount * 0.04f, 0.1f, 0.5f));
+            _hurtFlash = Mathf.Max(_hurtFlash, Mathf.Clamp01(0.25f + amount * 0.03f));
+            if (amount >= 2f) CameraFollow.Shake(Mathf.Clamp(0.1f + amount * 0.02f, 0.1f, 0.5f));
         }
 
         void OnMilestone(int milestone)
@@ -136,18 +137,18 @@ namespace Cellstorm.UI
             GUI.color = new Color(0.25f, 0.55f, 1f, boosted ? 0.95f : 0.55f);
             GUI.DrawTexture(halo, HudTextures.Heart);
 
-            // Empty heart, then the filled part from the bottom (cells / max cells).
+            // Empty heart, then the filled part from the bottom (HP / max HP). Phase 5 replaces the heart by a health bar.
             GUI.color = new Color(0.22f, 0.05f, 0.08f, 1f);
             GUI.DrawTexture(r, HudTextures.Heart);
 
-            float f = Mathf.Clamp01(stats.Cells / (float)Mathf.Max(1, stats.MaxCells));
+            float f = Mathf.Clamp01(stats.Hp / Mathf.Max(1f, stats.MaxHp));
             var fill = new Rect(r.x, r.yMax - r.height * f, r.width, r.height * f);
             GUI.color = new Color(0.90f, 0.15f, 0.22f, 1f);
             GUI.DrawTextureWithTexCoords(fill, HudTextures.Heart, new Rect(0f, 0f, 1f, f));
             GUI.color = Color.white;
 
-            GUI.Label(r, stats.Cells.ToString(), UiStyles.HeartText);
-            GUI.Label(new Rect(r.x, r.y - 22f, r.width, 20f), "max " + stats.MaxCells, UiStyles.SmallCenter);
+            GUI.Label(r, Mathf.CeilToInt(stats.Hp).ToString(), UiStyles.HeartText);
+            GUI.Label(new Rect(r.x, r.y - 22f, r.width, 20f), "max " + Mathf.RoundToInt(stats.MaxHp), UiStyles.SmallCenter);
         }
 
         void DrawDef(SwarmStats stats)
@@ -264,7 +265,7 @@ namespace Cellstorm.UI
             float w = 440f, h = 20f;
             float x = (Screen.width - w) * 0.5f;
             float y = 12f;
-            float f = Mathf.Clamp01((float)boss.Stats.Cells / Mathf.Max(1, boss.Stats.MaxCells));
+            float f = Mathf.Clamp01(boss.Stats.Hp / Mathf.Max(1f, boss.Stats.MaxHp));
 
             UiDraw.Fill(new Rect(x - 3f, y - 3f, w + 6f, h + 6f), new Color(0f, 0f, 0f, 0.65f));
             UiDraw.Fill(new Rect(x, y, w * f, h), boss.Spec.color);

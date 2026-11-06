@@ -21,7 +21,8 @@ namespace Cellstorm.Meta
             new Entry { id = "hardening", name = "Hardening", threshold = 150 },
             new Entry { id = "gun", name = "Gun", threshold = 200 },
             new Entry { id = "loadout_speedy", name = "Speedy loadout", threshold = 3000 },  // placeholder, see README balance table
-            new Entry { id = "loadout_tank", name = "Tank loadout", threshold = 10000 }  // placeholder, see README balance table
+            new Entry { id = "loadout_tank", name = "Tank loadout", threshold = 10000 },  // placeholder, see README balance table
+            new Entry { id = "loadout_giant", name = "Giant loadout", threshold = 5000 }  // placeholder (GDD V0.1.1)
         };
 
         public static int ThresholdFor(string id)

@@ -22,7 +22,7 @@ namespace Cellstorm.UI
             GUI.Label(new Rect(area.x + 10f, area.y + 50f, area.width - 20f, 28f), stats, UiStyles.Small);
 
             float y = area.y + 86f;
-            DrawRow(area.x + 10f, y, area.width - 20f, "#", "Score", "Time", "Result", "Loadout", "Cells", "DEF", "Spd", "Weapons", true);
+            DrawRow(area.x + 10f, y, area.width - 20f, "#", "Score", "Time", "Result", "Loadout", "Max HP", "DEF", "Spd", "Weapons", true);
             y += 30f;
 
             var listRect = new Rect(area.x + 10f, y, area.width - 20f, area.yMax - y - 60f);
@@ -33,7 +33,7 @@ namespace Cellstorm.UI
                 var r = data.leaderboard[i];
                 string result = r.won ? (r.endless ? "Won + endless" : "Won") : "Defeated";
                 DrawRow(0f, i * 28f, listRect.width - 20f, (i + 1).ToString(), r.score.ToString(), UiDraw.Time(r.runTime),
-                    result, r.loadout, r.maxCells.ToString(), r.defense.ToString("0.#"), r.speed.ToString("0.#"), r.weapons, false);
+                    result, r.loadout, (r.maxHp > 0f ? Mathf.RoundToInt(r.maxHp).ToString() : "-"), r.defense.ToString("0.#"), r.speed.ToString("0.#"), r.weapons, false);
             }
             if (n == 0) GUI.Label(new Rect(0f, 0f, listRect.width, 28f), "No runs yet. Go play!", UiStyles.Label);
             GUI.EndScrollView();

@@ -40,8 +40,13 @@ namespace Cellstorm.Data
         [Tooltip("Cooldown applied when the key is released before the shape is complete.")]
         [Min(0)] public float cancelCooldown = 0.5f;
 
+        [Header("Damage")]
+        [Tooltip("Damage of one hit (Ram dash hit, Jaw bite, Gun bullet), reduced by the target's DEF. " +
+                 "V0.1.1 defaults: Ram 30, Jaw 150, Gun 100, enemy Ram 20 / Jaw 40 / Gun 20.")]
+        [Min(0)] public float damage = 100f;
+
         [Header("Cost")]
-        [Tooltip("Share of the cells that leave the body to form the weapon (0.1 = 10%).")]
+        [Tooltip("Share of MAX HP paid to deploy the weapon (0.1 = 10%). Phase 1: used for the cost of a lost cell only.")]
         [Range(0f, 1f)] public float cellShare = 0f;
 
         [Header("Turning")]
@@ -55,10 +60,12 @@ namespace Cellstorm.Data
         public float coneAngle = 90f;
         [Tooltip("How far the bite reaches beyond the swarm's edge.")]
         public float coneRange = 2f;
+        [Tooltip("OBSOLETE in V0.1.1 (DEF no longer decides hits). Removed in Phase 4.")]
         public float biteDefMultiplier = 2f;
 
         [Header("Gun")]
         public float bulletSpeedMultiplier = 2f;
+        [Tooltip("OBSOLETE in V0.1.1 (DEF no longer decides hits). Removed in Phase 4.")]
         public float bulletDefMultiplier = 2f;
         [Tooltip("Improvable. Player bullets never pierce bosses.")]
         [Min(0)] public int pierce = 0;
@@ -67,9 +74,8 @@ namespace Cellstorm.Data
         [Header("Skill (Hardening)")]
         public float defMultiplier = 2f;
 
-        [Header("Weapon hit rule")]
-        [Tooltip("GDD: for weapons, higher DEF means auto win. True = a hit with higher DEF defeats the target " +
-                 "outright. False = uses the contact damage formula as a one-off hit.")]
-        public bool autoWin = true;
+        [Header("Obsolete")]
+        [Tooltip("OBSOLETE in V0.1.1 (no auto win). Removed in Phase 4.")]
+        public bool autoWin = false;
     }
 }

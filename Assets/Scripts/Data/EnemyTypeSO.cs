@@ -20,33 +20,35 @@ namespace Cellstorm.Data
         public string displayName = "Enemy";
         public Color color = new Color(0.95f, 0.35f, 0.35f, 1f);
 
-        [Header("Stats")]
-        [Min(1)] public int maxCells = 1;
-        [Min(0)] public float cellRegen = 0f;
+        [Header("Stats (enemies never regenerate HP)")]
+        [Min(1)] public float maxHp = 10f;
         [Min(0)] public float defense = 1f;
         [Min(0)] public float speed = 1f;
+
+        [Header("Damage")]
+        [Tooltip("HP per second dealt to the player while touching (before the player's DEF).")]
+        [Min(0)] public float contactDps = 5f;
 
         [Header("Behaviour")]
         public EnemyBehavior behavior = EnemyBehavior.Chase;
         [Tooltip("KeepDistance only: distance from the player this enemy tries to hold.")]
         public float preferredRange = 6f;
 
-        [Header("Explosion (Explode behaviour only) - PLACEHOLDER VALUES")]
+        [Header("Explosion (Explode behaviour only)")]
         [Tooltip("Explodes when the gap between its edge and the player's edge is below this.")]
         public float explosionTriggerRange = 0.6f;
         public float explosionRadius = 1.8f;
-        [Tooltip("Flat cells removed from the player. Ignores DEF for now (the GDD leaves this open).")]
-        [Min(0)] public int explosionDamage = 2;
+        [Tooltip("Damage dealt to the player, reduced by the player's DEF.")]
+        [Min(0)] public float explosionDamage = 20f;
 
         [Header("Weapon")]
         [Tooltip("Optional weapon this enemy uses (slot 0). Ranged cell: the Enemy Gun.")]
         public WeaponSO weapon;
 
         [Header("Rewards")]
+        [Tooltip("Flat score for defeating it (GDD V0.1.1: 1, 10, 100, 2).")]
         public int scoreValue = 1;
-        [Tooltip("If true, score = scoreValue x max cells (GDD: multi 1/cell, ranged 2/cell).")]
-        public bool scorePerCell = false;
-        [Tooltip("PLACEHOLDER: EXP orbs arrive in Phase 5 and the GDD has no numbers yet.")]
+        [Tooltip("PLACEHOLDER: EXP dropped.")]
         public int expValue = 1;
     }
 }

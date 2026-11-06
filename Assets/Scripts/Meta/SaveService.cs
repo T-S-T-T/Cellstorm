@@ -47,6 +47,10 @@ namespace Cellstorm.Meta
             }
 
             if (_data == null) _data = new SaveData();
+
+            // Save version 2 (V0.1.1): leaderboard rows gained maxHp. V0.1 rows keep maxCells and show "-" for HP.
+            // Unlocks, high score and lifetime score carry over because score values did not change.
+            if (_data.version < 2) _data.version = 2;
             if (_data.unlocked == null) _data.unlocked = new List<string>();
             if (_data.leaderboard == null) _data.leaderboard = new List<RunRecord>();
             if (_data.stats == null) _data.stats = new Statistics();

@@ -128,7 +128,7 @@ namespace Cellstorm.Progression
                 {
                     float amount = u.amount * EffectMultiplier(u.stat);
                     _stats.AddToBase(u.stat, amount);
-                    if (u.stat == StatType.MaxCells && u.addCurrentCells) _stats.Heal(Mathf.RoundToInt(amount));
+                    if (u.stat == StatType.MaxHp && u.addCurrentCells) _stats.Heal(amount);
                     break;
                 }
 
@@ -158,10 +158,10 @@ namespace Cellstorm.Progression
             return true;
         }
 
-        /// <summary>Tank evolution: Max Cells and Regen upgrades are weaker after evolving.</summary>
+        /// <summary>Tank evolution: Max HP and Regen upgrades are weaker after evolving.</summary>
         float EffectMultiplier(StatType stat)
         {
-            if (TankEvolved && (stat == StatType.MaxCells || stat == StatType.CellRegen)) return _growthEffect;
+            if (TankEvolved && (stat == StatType.MaxHp || stat == StatType.HpRegen)) return _growthEffect;
             return 1f;
         }
 

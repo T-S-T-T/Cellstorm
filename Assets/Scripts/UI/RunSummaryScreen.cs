@@ -56,7 +56,7 @@ namespace Cellstorm.UI
             Line(x, ref y, panelW, "Milestone reached", r.milestone + (r.endless ? " (endless)" : ""));
             Line(x, ref y, panelW, "Loadout", r.loadout);
             Line(x, ref y, panelW, "Enemies defeated", r.enemiesDefeated + "   (bosses " + r.bossesDefeated + ")");
-            Line(x, ref y, panelW, "Final swarm", r.maxCells + " max cells   DEF " + r.defense.ToString("0.#") +
+            Line(x, ref y, panelW, "Final swarm", MaxHpText(r) + " max HP   DEF " + r.defense.ToString("0.#") +
                                                   "   speed " + r.speed.ToString("0.#") + "   regen " + r.regen.ToString("0.#") + "/s");
             Line(x, ref y, panelW, "Weapons and skills", string.IsNullOrEmpty(r.weapons) ? "-" : r.weapons);
 
@@ -95,6 +95,11 @@ namespace Cellstorm.UI
             GUI.Label(new Rect(x, y, 230f, 28f), label, UiStyles.Small);
             GUI.Label(new Rect(x + 240f, y, w - 240f, 28f), value, UiStyles.Label);
             y += 30f;
+        }
+    
+        static string MaxHpText(RunRecord r)
+        {
+            return r.maxHp > 0f ? Mathf.RoundToInt(r.maxHp).ToString() : (r.maxCells > 0 ? r.maxCells + " cells" : "-");
         }
     }
 }

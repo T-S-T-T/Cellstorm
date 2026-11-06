@@ -1,0 +1,60 @@
+Cellstorm
+Note to update the version from V0.1 to V0.1.1
+
+Visual: will apply to both player ans enemies
+    the swarm will no londer be a bunch of dots clumping together. a swarm will be 1 entity with a soft ball object physics. the size of the soft ball is fixed for the player and for enemies: it does not change with HP or cell count. enemy size is set by its type. the class "giant" doubles the player's size.
+    the swarm hitbox will be slightly larger than the softball visual
+    using weapons that require cells (gun, jaw, etc...):
+        every weapon that requires cells needs 100 cells every time, no matter the HP or body size. the class "giant" increases this to 200 cells. the size of the weapon is proportional to body size.
+        the swarm will spawn the needed cells to form the weapon
+        the spawned cells will take x% of max health(weapon will not work if current HP < x%). the taken HP will be shared among the spawned cells. cells will also take x% HP regen. cell will have the same DEF as swarm
+            by default, x = 10. x can be increased or decreased to + or - dmg
+        when using the weapon, if current HP goes below the threshold of the used weapon, it will stop deploying. this should have the same effect as releasing the attack button
+        when using the weapon, each cell spawned will have its own HP, DEF. the spd is determined by weapon deploy time. cell spd is ALWAYS faster than swarm spd
+        the moment a weapon is deployed, the required amount of cells are spawned inside the swarm. the cells then quickly move to their own spots
+        the cell's HP is linked to the swarm own HP. when a cell is damaged, the dmg is reflected on the HP bar
+        if a cell dies, a new cell spawns. the cells then reorganize to make the shape again.
+        when a cell spawns, it belongs to the cell group. more cells will only spawn if the deploying weapon needs more cells. if more cells are present during deploying, the excess cells moves back to the swarm then despawn
+            this is to prevent spam clicking and spawn infinite cells
+        when the weapon finish firing, all of the cells move back to the swarm
+        Cell regen. Do the cells take x% of regen and heal themselves, while the body’s regen drops by x% while deployed?
+            No. the swarm will keep the same regen.
+
+        What does changing x do?
+            in certain upgrades, x will be reduced and dmg will increase (by %)
+                for now, make an upgrade to increase the dmg by 50% and increase x to 30%
+        only 1 weapon of this type can be deployed at a time (for this version, ram does NOT count as this type, so for example, ram and gun can be used at the same time, but not gun and jaw)
+
+HUD:    
+    change the heart to a health bar. when a weapon that uses health, the start of the health bar will be highlighted
+    remove the DEF visual. this can be internal 
+            
+
+health system:
+    revert to a typical health, max health, def in typical rougelike. the stats should be present in both the player and enemies (unless specified)
+        max HP: the max health of the swarm. the player always spawn with max health
+        current HP: current HP of the swarm. this will also determine the size of the swarm. the swarm will die if HP goes to 0
+        HP regen: the regen of HP (HP/sec). in gameplay, it will be converted into HP/tick for smooth and consistent HP bar visual. enemies will have no regen
+        DEF: the Defense of the swarm. getting more will get the swarm more %dmg reduction. this uses a log function. the max dmg reduction is 90%
+        swarm moving spd: reduce the moving spd a lot from V0.1. make this linear. each upgrade
+        weapon deploy time: this will be a log func. each spd will make deploy faster by 2%. capped at 0.1s
+            weapon deploy affect the cell spd. the cell's spd will be used when cells return to swarm. cell spd for deploying will be reverse calculated using the depoly time (only use if there's no better solution)
+        weaopn cooldown: this will be a log func. each spd will make deploy faster by 2%. capped at 0.1s
+
+dmg:
+    each type of weapon or anything that deals dmg will have its own dmg.
+        for now, give each weapon a random logical dmg number. it will be changed later
+
+Is the old DEF-comparison system fully gone? 
+    yes. each weapon will have their own dmg.
+        jaw: jaw damage
+        gun: bullet damage
+        ram: when it is activated, the swarm will have contact damage for 0.3s. ram hits each enemy once per dash
+    every enemy will have contact damage
+
+in this version, in the upgrade screen, increase the available upgrades from 3 to as amny as possible (for debug purposes)
+
+in the upgrade screen, after choosing a weapon, the game will let the player choose which slot the weapon goes to (even if there's open slots) by having the player presses the designated slot's key
+
+
+

@@ -15,8 +15,6 @@ namespace Cellstorm.Enemies
     [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D), typeof(SwarmStats))]
     public class Enemy : MonoBehaviour, IAbilityHost
     {
-        public const float UnitsPerSpeedPoint = 2.5f;
-
         public static readonly List<Enemy> Active = new List<Enemy>();
 
         /// <summary>Raised when an enemy dies from damage (not when it despawns or explodes).</summary>
@@ -34,7 +32,7 @@ namespace Cellstorm.Enemies
         public EnemySpec Spec { get; private set; }
         public SwarmStats Stats { get; private set; }
         public bool IsBoss => Spec.isBoss;
-        public int ScoreValue => Spec.scorePerCell ? Spec.scoreValue * Spec.maxCells : Spec.scoreValue;
+        public int ScoreValue => Spec.scoreValue;
 
         public float TurnRateMultiplier { get; set; } = 1f;
         public Vector2 AimDirection =>
@@ -64,9 +62,14 @@ namespace Cellstorm.Enemies
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
             rb.mass = spec.isBoss ? 20f : 1f;
 
+            if (spec.damageMultiplier <= 0f) spec.damageMultiplier = 1f;
+
             go.AddComponent<CircleCollider2D>();
-            go.AddComponent<SwarmStats>().Configure(spec.maxCells, spec.regen, spec.defense, spec.speed);
-            go.AddComponent<SwarmCombat>().SetFaction(Faction.Enemy);
+            go.AddComponent<SwarmStats>().Configure(spec.maxHp, 0f, spec.defense, spec.speed);
+            var combat = go.AddComponent<SwarmCombat>();
+            combat.SetFaction(Faction.Enemy);
+            combat.ContactDps = spec.contactDps * spec.damageMultiplier;
+            // The visual sets the fixed body size from the max HP when it wakes up.
             go.AddComponent<CircleSwarmVisual>().SetColor(spec.color);
 
             var enemy = go.AddComponent<Enemy>();
@@ -75,6 +78,7 @@ namespace Cellstorm.Enemies
             if (spec.weapon != null)
             {
                 enemy._abilities = go.AddComponent<AbilityController>();
+                enemy._abilities.DamageMultiplier = spec.damageMultiplier;
                 enemy._abilities.Equip(0, spec.weapon);
             }
             return enemy;
@@ -210,7 +214,7 @@ namespace Cellstorm.Enemies
                 Vector2 to = (Vector2)_target.transform.position - (Vector2)transform.position;
                 float dist = to.magnitude;
                 Vector2 dir = dist > 0.0001f ? to / dist : Vector2.zero;
-                float speed = Stats.Speed * UnitsPerSpeedPoint;
+                float speed = SpeedMath.MoveSpeed(Stats.Speed);
 
                 switch (Spec.behavior)
                 {
@@ -254,8 +258,12 @@ namespace Cellstorm.Enemies
             if (_target != null && !_target.IsDead)
             {
                 float gap = Vector2.Distance(center, _target.transform.position) - _target.Radius;
-                // PLACEHOLDER: flat damage that ignores DEF (the GDD leaves explosions undefined).
-                if (gap <= Spec.explosionRadius) _target.Stats.TakeDamage(Spec.explosionDamage);
+                // Explosion damage is reduced by the player's DEF like any other hit.
+                if (gap <= Spec.explosionRadius)
+                {
+                    _target.Stats.TakeDamage(new DamageInfo(
+                        Spec.explosionDamage * Spec.damageMultiplier, DamageType.Explosion, Faction.Enemy, center));
+                }
             }
 
             ExplosionFx.Spawn(center, Spec.explosionRadius, Spec.color);

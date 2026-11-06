@@ -50,23 +50,23 @@ namespace Cellstorm.Data
                     w.description = "Dash quickly toward the cursor.";
                     w.kind = AbilityKind.Weapon; w.type = WeaponType.Ram;
                     w.shapeTime = 0f; w.executeTime = 0f; w.cooldown = 1f;
-                    w.dashSpeed = 12f;
+                    w.dashSpeed = 12f; w.damage = 30f;
                     break;
 
                 case JawKey:
                     w.displayName = "Jaw";
-                    w.description = "Hold to form a jaw, release to bite. Eats anything in the cone with lower DEF.";
+                    w.description = "Hold to form a jaw, release to bite everything in the cone for 150 damage.";
                     w.kind = AbilityKind.Weapon; w.type = WeaponType.Jaw;
                     w.shapeTime = 3f; w.executeTime = 0.1f; w.cooldown = 3f; w.cellShare = 0.1f;
-                    w.coneAngle = 90f; w.coneRange = 2f; w.biteDefMultiplier = 2f;
+                    w.coneAngle = 90f; w.coneRange = 2f; w.damage = 150f;
                     break;
 
                 case GunKey:
                     w.displayName = "Gun";
-                    w.description = "Hold to form a barrel, release to fire a slow, high-DEF bullet.";
+                    w.description = "Hold to form a barrel, release to fire a bullet for 100 damage.";
                     w.kind = AbilityKind.Weapon; w.type = WeaponType.Gun;
                     w.shapeTime = 3f; w.executeTime = 0f; w.cooldown = 3f; w.cellShare = 0.1f;
-                    w.bulletSpeedMultiplier = 2f; w.bulletDefMultiplier = 2f; w.pierce = 0; w.bulletRadius = 0.2f;
+                    w.bulletSpeedMultiplier = 2f; w.pierce = 0; w.bulletRadius = 0.2f; w.damage = 100f;
                     break;
 
                 case HardeningKey:
@@ -81,7 +81,7 @@ namespace Cellstorm.Data
                     w.description = "The enemy railgun: 5 seconds to form. Destroy its barrel cells to interrupt it.";
                     w.kind = AbilityKind.Weapon; w.type = WeaponType.Gun;
                     w.shapeTime = 5f; w.executeTime = 0f; w.cooldown = 3f; w.cellShare = 0.1f;
-                    w.bulletSpeedMultiplier = 2f; w.bulletDefMultiplier = 2f; w.pierce = 0; w.bulletRadius = 0.2f;
+                    w.bulletSpeedMultiplier = 2f; w.pierce = 0; w.bulletRadius = 0.2f; w.damage = 20f;
                     break;
             }
             return w;

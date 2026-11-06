@@ -8,19 +8,21 @@ namespace Cellstorm.Weapons
     /// <summary>
     /// Shared flow for Jaw and Gun: hold the key to move cells out of the body into a weapon shape
     /// (Shaping), wait primed once complete, release to execute, then return the cells and cool down.
-    /// Releasing early cancels. Weapon cells are physical: a hostile swarm / bullet / bite with higher DEF
-    /// destroys them, which costs real cells and sets the shape progress back.
+    /// Releasing early cancels. Weapon cells are physical: a hostile swarm with higher DEF, or any hostile bullet or
+    /// bite, destroys them, which costs real HP and sets the shape progress back.
+    /// TEMPORARY (V0.1.1 Phase 1): 12 visual cells and a simple HP cost. Phase 4 replaces this with the fixed 100 / 200
+    /// cell model that holds HP.
     /// </summary>
     public abstract class ShapedAbility : Ability
     {
-        public const int MaxVisualCells = 24;
+        public const int TempVisualCells = 12;
 
         readonly List<WeaponCell> _cells = new List<WeaponCell>();
         float _progress;
         float _executeTimer;
         float _returnTimer;
         bool _returning;
-        int _weight = 1;
+        float _cellLoss = 1f;
         StatModifier _executeMod;
 
         protected float Closure { get; private set; }
@@ -65,7 +67,7 @@ namespace Cellstorm.Weapons
             switch (Phase)
             {
                 case AbilityPhase.Ready:
-                    if (input.held && Owner.Stats.Cells >= 2) BeginShaping();
+                    if (input.held && Owner.Stats.Hp > Cost + 0.5f) BeginShaping();
                     break;
 
                 case AbilityPhase.Shaping:
@@ -99,12 +101,13 @@ namespace Cellstorm.Weapons
             UpdateCells(dt);
         }
 
+        /// <summary>HP the weapon costs: x% of max HP (10% by default).</summary>
+        float Cost => Data.cellShare * Owner.Stats.MaxHp;
+
         void BeginShaping()
         {
-            // GDD: uses 10% of the cells. Rounded up, at least 1.
-            int logical = Mathf.Max(1, Mathf.CeilToInt(Owner.Stats.Cells * Data.cellShare));
-            int visual = Mathf.Min(logical, MaxVisualCells);
-            _weight = Mathf.Max(1, Mathf.RoundToInt((float)logical / visual));
+            int visual = TempVisualCells;
+            _cellLoss = Cost / visual;
 
             ClearCells();
             _progress = 0f;
@@ -140,7 +143,7 @@ namespace Cellstorm.Weapons
             if (_returning || (Phase != AbilityPhase.Shaping && Phase != AbilityPhase.Primed)) return;
 
             // The cell is really lost, and the shape has to be rebuilt.
-            Owner.Stats.TakeDamage(_weight);
+            Owner.Stats.TakeTrueDamage(_cellLoss);
             _progress = Mathf.Max(0f, _progress - 1f / Mathf.Max(1, _cells.Count));
             if (Phase == AbilityPhase.Primed) Phase = AbilityPhase.Shaping;
             if (cell != null) cell.ResetToBody(Owner.Position);

@@ -104,7 +104,7 @@ namespace Cellstorm.Swarm
 
             float dt = Mathf.Min(Time.deltaTime, MaxDt);
 
-            int want = Mathf.Min(body.CellCount, maxVisualCells);
+            int want = Mathf.Min(body.LegacyDotCount, maxVisualCells);
             if (want != _active) Rebuild(want);
 
             float R = body.SmoothedRadius;

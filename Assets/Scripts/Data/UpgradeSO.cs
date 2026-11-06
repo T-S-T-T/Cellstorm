@@ -14,9 +14,9 @@ namespace Cellstorm.Data
 
     public enum UpgradeEffect
     {
-        /// <summary>Permanent flat change to a base stat (Max cells +10, Regen +1, DEF +1, Speed +1).</summary>
+        /// <summary>Permanent flat change to a base stat (Max HP +20, Regen +1, DEF +1, Speed +1).</summary>
         StatAdd,
-        /// <summary>Permanent percentage change, e.g. +20% DEF and -10% max cells (Dense Cells).</summary>
+        /// <summary>Permanent percentage change, e.g. +20% DEF and -10% max HP (Dense Cells).</summary>
         StatPercent,
         /// <summary>Equip a weapon or skill.</summary>
         GrantWeapon,
@@ -56,17 +56,17 @@ namespace Cellstorm.Data
         public StatType stat = StatType.Defense;
         [Tooltip("StatAdd: amount added to the base stat.")]
         public float amount = 1f;
-        [Tooltip("StatAdd on Max Cells: also add that many cells right now.")]
+        [Tooltip("StatAdd on Max HP: also heal that much right now.")]
         public bool addCurrentCells = true;
         [Tooltip("StatPercent: +0.2 = +20%, -0.1 = -10%.")]
         public float percent = 0f;
-        public StatType secondaryStat = StatType.MaxCells;
+        public StatType secondaryStat = StatType.MaxHp;
         public float secondaryPercent = 0f;
         public WeaponSO weapon;
 
         [Header("Evolution (Tank)")]
         public float evolutionDefMultiplier = 5f;
-        [Tooltip("Multiplier on the effect of Max Cells and Regen upgrades taken after evolving.")]
+        [Tooltip("Multiplier on the effect of Max HP and Regen upgrades taken after evolving.")]
         public float evolutionGrowthEffect = 0.5f;
     }
 }

@@ -7,20 +7,13 @@ using UnityEngine;
 namespace Cellstorm.Swarm
 {
     /// <summary>
-    /// The physical body of the player swarm: movement with inertia, size from cell count,
-    /// knockback, and a turn-rate limited aim direction. Cells, DEF and speed now come from SwarmStats.
+    /// The physical body of the player swarm: movement with inertia, a FIXED size (GDD V0.1.1 section 4.1),
+    /// knockback, and a turn-rate limited aim direction. HP, DEF and speed come from SwarmStats.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D), typeof(SwarmStats))]
     public class SwarmBody : MonoBehaviour, IAbilityHost
     {
-        [Header("Size")]
-        [Tooltip("Radius = this * sqrt(cells). 5 cells ~ 0.34, 50 ~ 1.06, 500 ~ 3.4")]
-        [SerializeField] float radiusPerSqrtCell = 0.15f;
-        [SerializeField] float radiusSmoothing = 6f;
-
-        [Header("Movement")]
-        [Tooltip("World units per second for each point of the Speed stat (base 2).")]
-        [SerializeField] float unitsPerSpeedPoint = 2.5f;
+        [Header("Movement (units per second = Speed x 1, see SpeedMath)")]
         [Tooltip("How quickly the swarm speeds up (units/s^2).")]
         [SerializeField] float acceleration = 16f;
         [Tooltip("How quickly the swarm slows down when no key is held. Lower = more sliding.")]
@@ -36,21 +29,27 @@ namespace Cellstorm.Swarm
         Rigidbody2D _rb;
         CircleCollider2D _col;
         SwarmStats _stats;
+        float _sizeMultiplier = 1f;
         Vector2 _moveVelocity;
         Vector2 _knockback;
         float _aimAngle = 90f;
 
-        /// <summary>Raised when the cell count changes (new count).</summary>
-        public event Action<int> CellCountChanged;
-
         public SwarmStats Stats => _stats;
         public bool IsDead => _stats.IsDead;
-        public int CellCount => _stats.Cells;
-        /// <summary>Target radius for the current cell count.</summary>
-        public float Radius => radiusPerSqrtCell * Mathf.Sqrt(Mathf.Max(1, _stats.Cells));
-        /// <summary>Radius eased toward Radius; use for visuals and camera.</summary>
-        public float SmoothedRadius { get; private set; }
-        public float MoveSpeed => _stats.Speed * unitsPerSpeedPoint;
+        /// <summary>Loadout size multiplier (Giant = 2).</summary>
+        public float SizeMultiplier => _sizeMultiplier;
+        /// <summary>Visual radius. Fixed: never reads HP. 0.335 x the size multiplier.</summary>
+        public float Radius => SwarmSize.ForPlayer(_sizeMultiplier);
+        /// <summary>Same as Radius (kept for the visual and camera code that used the eased radius).</summary>
+        public float SmoothedRadius => Radius;
+        /// <summary>Collider radius: the visual radius x 1.1.</summary>
+        public float ColliderRadius => SwarmSize.Collider(Radius);
+        /// <summary>
+        /// TEMPORARY until the soft ball visual (Phase 3): how many dots the old dot visual draws, derived from the
+        /// radius so a normal player looks like V0.1 with 5 cells.
+        /// </summary>
+        public int LegacyDotCount => Mathf.Max(1, Mathf.RoundToInt((Radius / 0.15f) * (Radius / 0.15f)));
+        public float MoveSpeed => SpeedMath.MoveSpeed(_stats.Speed);
 
         /// <summary>Weapons set this below 1 while shaping/executing (reduced turning rate).</summary>
         public float TurnRateMultiplier { get; set; } = 1f;
@@ -73,26 +72,20 @@ namespace Cellstorm.Swarm
             _rb.freezeRotation = true;
             _rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-            SmoothedRadius = Radius;
-            _col.radius = Radius;
-            _stats.CellsChanged += OnCellsChanged;
+            _col.radius = ColliderRadius;
         }
 
-        void OnDestroy()
+        /// <summary>Loadout choice (Giant = 2). The size is set once and never changes with HP.</summary>
+        public void SetSizeMultiplier(float multiplier)
         {
-            if (_stats != null) _stats.CellsChanged -= OnCellsChanged;
+            _sizeMultiplier = Mathf.Max(0.1f, multiplier);
+            if (_col != null) _col.radius = ColliderRadius;
         }
 
-        void OnCellsChanged(int cells)
+        /// <summary>Test helper: sets max HP and current HP together.</summary>
+        public void SetMaxHp(float value)
         {
-            _col.radius = Radius;
-            CellCountChanged?.Invoke(cells);
-        }
-
-        /// <summary>Test helper (Phase 1 debug keys): sets max cells and current cells.</summary>
-        public void SetCellCount(int count)
-        {
-            _stats.DebugSetMaxAndCells(count);
+            _stats.DebugSetMaxAndHp(value);
         }
 
         public void AddKnockback(Vector2 velocity)
@@ -103,7 +96,6 @@ namespace Cellstorm.Swarm
         void Update()
         {
             float dt = Time.deltaTime;
-            SmoothedRadius = Mathf.Lerp(SmoothedRadius, Radius, 1f - Mathf.Exp(-radiusSmoothing * dt));
 
             if (!CanAct()) return;
 

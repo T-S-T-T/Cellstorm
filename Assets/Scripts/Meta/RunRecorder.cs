@@ -118,15 +118,15 @@ namespace Cellstorm.Meta
             if (build != null && build.Stats != null)
             {
                 var s = build.Stats;
-                r.maxCells = s.MaxCells;
-                r.regen = s.CellRegen;
+                r.maxHp = s.MaxHp;
+                r.regen = s.HpRegen;
                 r.defense = s.Defense;
                 r.speed = s.Speed;
                 r.weapons = DescribeAbilities(build.Abilities);
             }
             else
             {
-                r.maxCells = _snapshot.maxCells;
+                r.maxHp = _snapshot.maxHp;
                 r.regen = _snapshot.regen;
                 r.defense = _snapshot.defense;
                 r.speed = _snapshot.speed;

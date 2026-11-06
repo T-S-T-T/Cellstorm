@@ -9,10 +9,15 @@ namespace Cellstorm.Enemies
         public string name;
         public Color color;
 
-        public int maxCells;
-        public float regen;
+        /// <summary>Max HP. Enemies never regenerate. The body size is set once from this (SwarmSize.ForEnemy).</summary>
+        public float maxHp;
         public float defense;
         public float speed;
+
+        /// <summary>HP per second dealt to the player while touching, before the boss multiplier and the player's DEF.</summary>
+        public float contactDps;
+        /// <summary>Bosses: 1 + 0.2 x (milestone - 1), applied to contact and weapon damage. Others: 1.</summary>
+        public float damageMultiplier;
 
         public EnemyBehavior behavior;
         public float preferredRange;
@@ -20,10 +25,9 @@ namespace Cellstorm.Enemies
 
         public float explosionTriggerRange;
         public float explosionRadius;
-        public int explosionDamage;
+        public float explosionDamage;
 
         public int scoreValue;
-        public bool scorePerCell;
         public int expValue;
 
         public bool isBoss;
@@ -36,10 +40,11 @@ namespace Cellstorm.Enemies
             {
                 name = t.displayName,
                 color = t.color,
-                maxCells = t.maxCells,
-                regen = t.cellRegen,
+                maxHp = t.maxHp,
                 defense = t.defense,
                 speed = t.speed,
+                contactDps = t.contactDps,
+                damageMultiplier = 1f,
                 behavior = t.behavior,
                 preferredRange = t.preferredRange,
                 weapon = t.weapon,
@@ -47,7 +52,6 @@ namespace Cellstorm.Enemies
                 explosionRadius = t.explosionRadius,
                 explosionDamage = t.explosionDamage,
                 scoreValue = t.scoreValue,
-                scorePerCell = t.scorePerCell,
                 expValue = t.expValue,
                 isBoss = false,
                 milestone = milestone

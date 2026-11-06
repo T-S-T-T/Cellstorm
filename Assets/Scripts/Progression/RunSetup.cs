@@ -16,6 +16,8 @@ namespace Cellstorm.Progression
     {
         /// <summary>Name of the loadout chosen this run (leaderboard).</summary>
         public static string SelectedLoadout { get; private set; } = "Default";
+        /// <summary>Cells spawned by Jaw and Gun for the chosen loadout (100, Giant 200). Used from Phase 4.</summary>
+        public static int WeaponCellCount { get; private set; } = 100;
 
         [SerializeField] StatBlockSO[] loadouts;
         [Tooltip("Testing: skip the picker and start with the first loadout.")]
@@ -67,7 +69,9 @@ namespace Cellstorm.Progression
         void Apply(StatBlockSO block)
         {
             SelectedLoadout = block.name;
-            _player.Stats.Configure(block.maxCells, block.cellRegen, block.defense, block.speed);
+            WeaponCellCount = block.weaponCellCount;
+            _player.Stats.Configure(block.maxHp, block.hpRegen, block.defense, block.speed);
+            _player.SetSizeMultiplier(block.sizeMultiplier);
         }
 
         static string UnlockIdFor(StatBlockSO b)
@@ -116,7 +120,8 @@ namespace Cellstorm.Progression
                 GUI.color = Color.white;
 
                 GUI.Label(new Rect(rect.x, rect.y + 12, rect.width, 36), b.name, _name);
-                string stats = "Cells " + b.maxCells + "   Regen " + b.cellRegen + "\nDEF " + b.defense + "   Speed " + b.speed;
+                string stats = "HP " + b.maxHp + "   Regen " + b.hpRegen + "/s\nDEF " + b.defense + "   Speed " + b.speed;
+                if (!Mathf.Approximately(b.sizeMultiplier, 1f)) stats += "\nBody x" + b.sizeMultiplier + "   Weapon cells " + b.weaponCellCount;
                 string text = unlocked
                     ? stats
                     : "Locked\nUnlocks at " + UnlockCatalog.ThresholdFor(unlockId) + " lifetime score\n(you have " + lifetime + ")";

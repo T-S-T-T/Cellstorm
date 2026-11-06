@@ -4,13 +4,13 @@ using UnityEngine;
 namespace Cellstorm.Swarm
 {
     /// <summary>
-    /// Simple look for non-player swarms: one circle sized by cell count, darker when hurt, and a short white
-    /// flash when it takes damage.
+    /// Simple look for non-player swarms: one circle with a FIXED size (set once from the max HP, GDD V0.1.1
+    /// section 4.1), darker when hurt, and a short white flash when it takes damage.
+    /// Replaced by the soft ball visual in Phase 3.
     /// </summary>
     public class CircleSwarmVisual : MonoBehaviour
     {
         [SerializeField] Color color = new Color(0.95f, 0.35f, 0.35f, 1f);
-        [SerializeField] float radiusPerSqrtCell = 0.15f;
         [SerializeField] int sortingOrder = 5;
 
         SwarmStats _stats;
@@ -18,6 +18,7 @@ namespace Cellstorm.Swarm
         SpriteRenderer _sr;
         Transform _spriteT;
         float _flash;
+        float _radius;
 
         public void SetColor(Color c)
         {
@@ -25,15 +26,22 @@ namespace Cellstorm.Swarm
         }
 
         public Color Color => color;
+        /// <summary>The fixed visual radius.</summary>
+        public float Radius => _radius;
 
         void Awake()
         {
             _stats = GetComponent<SwarmStats>();
             _col = GetComponent<CircleCollider2D>();
 
+            // Size is decided once, when the swarm appears.
+            _radius = SwarmSize.ForEnemy(_stats.MaxHp);
+            if (_col != null) _col.radius = SwarmSize.Collider(_radius);
+
             var go = new GameObject("Visual");
             go.transform.SetParent(transform, false);
             _spriteT = go.transform;
+            _spriteT.localScale = Vector3.one * (_radius * 2f);
 
             _sr = go.AddComponent<SpriteRenderer>();
             _sr.sprite = ProceduralSprites.Hard;
@@ -49,7 +57,7 @@ namespace Cellstorm.Swarm
             if (_stats != null) _stats.Damaged -= OnDamaged;
         }
 
-        void OnDamaged(int amount)
+        void OnDamaged(float amount)
         {
             _flash = 0.12f;
         }
@@ -62,13 +70,7 @@ namespace Cellstorm.Swarm
 
         void Apply()
         {
-            int cells = Mathf.Max(1, _stats.Cells);
-            float r = radiusPerSqrtCell * Mathf.Sqrt(cells);
-
-            if (_col != null) _col.radius = r;
-            _spriteT.localScale = Vector3.one * (r * 2f);
-
-            float frac = Mathf.Clamp01((float)cells / _stats.MaxCells);
+            float frac = Mathf.Clamp01(_stats.Hp / _stats.MaxHp);
             var dark = new Color(color.r * 0.45f, color.g * 0.45f, color.b * 0.45f, 1f);
             var c = Color.Lerp(dark, color, frac);
             _sr.color = _flash > 0f ? Color.Lerp(c, Color.white, 0.8f) : c;

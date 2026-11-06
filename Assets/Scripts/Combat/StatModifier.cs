@@ -2,8 +2,8 @@ namespace Cellstorm.Combat
 {
     public enum StatType
     {
-        MaxCells,
-        CellRegen,
+        MaxHp,
+        HpRegen,
         Defense,
         Speed
     }

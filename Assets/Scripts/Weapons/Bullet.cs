@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Cellstorm.Weapons
 {
     /// <summary>
-    /// A bullet with its own DEF. Hitting a hostile swarm or weapon cell with lower DEF defeats it
-    /// (GDD: higher DEF wins). Equal or lower DEF: the bullet is destroyed and nothing happens.
+    /// A bullet with a damage value. Hitting a hostile swarm deals that damage (reduced by the target's DEF);
+    /// hitting a hostile weapon cell breaks it. Pierce is always 0 against bosses.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D))]
     public class Bullet : MonoBehaviour
@@ -21,15 +21,13 @@ namespace Cellstorm.Weapons
         }
 
         public Faction Faction { get; private set; }
-        public float Defense { get; private set; }
+        public float Damage { get; private set; }
 
-        bool _autoWin;
         int _pierceLeft;
-        int _attackerCells;
         float _life = 8f;
 
-        public static Bullet Spawn(Vector2 position, Vector2 direction, float speed, float defense, int pierce,
-            bool autoWin, Faction faction, Color color, float radius, int attackerCells)
+        public static Bullet Spawn(Vector2 position, Vector2 direction, float speed, float damage, int pierce,
+            Faction faction, Color color, float radius)
         {
             var go = new GameObject("Bullet");
             go.transform.position = position;
@@ -47,10 +45,8 @@ namespace Cellstorm.Weapons
 
             var bullet = go.AddComponent<Bullet>();
             bullet.Faction = faction;
-            bullet.Defense = defense;
-            bullet._autoWin = autoWin;
+            bullet.Damage = damage;
             bullet._pierceLeft = Mathf.Max(0, pierce);
-            bullet._attackerCells = attackerCells;
 
             if (_material == null) _material = new Material(Shader.Find("Sprites/Default"));
             var visual = new GameObject("Visual");
@@ -84,15 +80,8 @@ namespace Cellstorm.Weapons
             if (go.TryGetComponent<WeaponCell>(out var cell))
             {
                 if (cell.Faction == Faction) return;
-                if (Defense > cell.Defense)
-                {
-                    cell.Break();
-                    Consume(false);
-                }
-                else
-                {
-                    Destroy(gameObject);
-                }
+                cell.Break();
+                Consume(false);
                 return;
             }
 
@@ -105,26 +94,11 @@ namespace Cellstorm.Weapons
 
         void HitSwarm(SwarmCombat target)
         {
-            float targetDef = target.Stats.Defense;
+            bool boss = target.TryGetComponent<Enemy>(out var enemy) && enemy.IsBoss;
 
-            if (Defense > targetDef)
-            {
-                int damage = _autoWin
-                    ? target.Stats.Cells
-                    : Mathf.Max(1, Mathf.RoundToInt(DamageCalculator.ContactDps(
-                        _attackerCells, Defense, target.Stats.Cells, targetDef)));
-
-                bool boss = target.TryGetComponent<Enemy>(out var enemy) && enemy.IsBoss;
-
-                target.Stats.TakeDamage(damage);
-                target.ReactToHit(transform.position);
-                Consume(boss);
-            }
-            else
-            {
-                // Equal DEF bounces, lower DEF is blocked. Either way nothing happens.
-                Destroy(gameObject);
-            }
+            target.Stats.TakeDamage(new DamageInfo(Damage, DamageType.Bullet, Faction, transform.position));
+            target.ReactToHit(transform.position);
+            Consume(boss);
         }
 
         void Consume(bool targetIsBoss)

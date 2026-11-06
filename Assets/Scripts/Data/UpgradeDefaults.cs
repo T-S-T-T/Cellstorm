@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Cellstorm.Data
 {
-    /// <summary>GDD V0.1 upgrades, created in code (editor menu saves them as assets; runtime fallback).</summary>
+    /// <summary>GDD V0.1.1 upgrades, created in code (editor menu saves them as assets; runtime fallback).</summary>
     public static class UpgradeDefaults
     {
         public static Color CategoryColor(UpgradeCategory c)
@@ -20,38 +20,38 @@ namespace Cellstorm.Data
 
         public static UpgradeSO[] CreateAll(WeaponSO jaw, WeaponSO gun, WeaponSO hardening)
         {
-            var expand = Make("max_cells", "Expand", "Max cells +10. The new cells appear right away.",
+            var expand = Make("max_cells", "Expand", "Max HP +20. You heal 20 HP right away.",
                 UpgradeCategory.Swarm, "HP");
-            expand.effect = UpgradeEffect.StatAdd; expand.stat = StatType.MaxCells;
-            expand.amount = 10f; expand.addCurrentCells = true;
+            expand.effect = UpgradeEffect.StatAdd; expand.stat = StatType.MaxHp;
+            expand.amount = 20f; expand.addCurrentCells = true;
 
-            var regen = Make("regen", "Regeneration", "Cell regen +1 per second.",
+            var regen = Make("regen", "Regeneration", "HP regen +1 per second.",
                 UpgradeCategory.Swarm, "RG");
-            regen.effect = UpgradeEffect.StatAdd; regen.stat = StatType.CellRegen; regen.amount = 1f;
+            regen.effect = UpgradeEffect.StatAdd; regen.stat = StatType.HpRegen; regen.amount = 1f;
 
-            var def = Make("defense", "Hardened Cells", "Cell defense (DEF) +1. Higher DEF always wins a clash.",
+            var def = Make("defense", "Hardened Cells", "DEF +1. You take less damage.",
                 UpgradeCategory.Swarm, "DEF");
             def.effect = UpgradeEffect.StatAdd; def.stat = StatType.Defense; def.amount = 1f;
 
-            var speed = Make("speed", "Swift Cells", "Speed +1.",
+            var speed = Make("speed", "Swift Cells", "Speed +1. You move faster, and weapons deploy and recharge faster.",
                 UpgradeCategory.Swarm, "SPD");
             speed.effect = UpgradeEffect.StatAdd; speed.stat = StatType.Speed; speed.amount = 1f;
 
             var dense = Make("dense_cells", "Dense Cells",
-                "+20% DEF, -10% max cells. Collect 5 to unlock an evolution.",
+                "+20% DEF, -10% max HP. Collect 5 to unlock an evolution.",
                 UpgradeCategory.Swarm, "DNS");
             dense.effect = UpgradeEffect.StatPercent;
             dense.stat = StatType.Defense; dense.percent = 0.2f;
-            dense.secondaryStat = StatType.MaxCells; dense.secondaryPercent = -0.1f;
+            dense.secondaryStat = StatType.MaxHp; dense.secondaryPercent = -0.1f;
 
             var jawUp = Make("jaw", "Jaw",
-                "Attack. Hold to form a jaw, release to bite. Eats anything in the cone with lower DEF.",
+                "Attack. Hold to form a jaw, release to bite for 150 damage.",
                 UpgradeCategory.Attack, "JAW");
             jawUp.effect = UpgradeEffect.GrantWeapon; jawUp.weapon = jaw;
             jawUp.repeatable = false; jawUp.unlockId = "jaw";
 
             var gunUp = Make("gun", "Gun",
-                "Attack. Hold to form a barrel, release to fire a slow bullet with double DEF.",
+                "Attack. Hold to form a barrel, release to fire a bullet for 100 damage.",
                 UpgradeCategory.Attack, "GUN");
             gunUp.effect = UpgradeEffect.GrantWeapon; gunUp.weapon = gun;
             gunUp.repeatable = false; gunUp.unlockId = "gun";
@@ -63,7 +63,7 @@ namespace Cellstorm.Data
             hardenUp.repeatable = false; hardenUp.unlockId = "hardening";
 
             var tank = Make("evo_tank", "Evolution: Tank",
-                "Evolution. DEF x5. Max cell and regen upgrades are half as effective from now on.",
+                "Evolution. DEF x5. Max HP and regen upgrades are half as effective from now on.",
                 UpgradeCategory.Evolution, "TNK");
             tank.effect = UpgradeEffect.EvolveTank; tank.repeatable = false;
             tank.requirementUpgrade = dense; tank.requirementStacks = 5;

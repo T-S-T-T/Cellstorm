@@ -13,7 +13,9 @@ namespace Cellstorm.Meta
         public bool won;
         public bool endless;
         public int milestone;
+        /// <summary>V0.1 rows only (cell count). New rows leave it 0 and fill maxHp.</summary>
         public int maxCells;
+        public float maxHp;
         public float regen;
         public float defense;
         public float speed;
@@ -38,7 +40,7 @@ namespace Cellstorm.Meta
     [Serializable]
     public class SaveData
     {
-        public int version = 1;
+        public int version = 2;
         public int highScore;
         /// <summary>Lifetime score across all runs. Unlocks use this (not spent).</summary>
         public int totalScore;

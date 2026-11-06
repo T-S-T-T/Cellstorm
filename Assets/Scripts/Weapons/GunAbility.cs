@@ -1,3 +1,4 @@
+using Cellstorm.Combat;
 using Cellstorm.Data;
 using UnityEngine;
 
@@ -5,7 +6,8 @@ namespace Cellstorm.Weapons
 {
     /// <summary>
     /// Cells line up into a barrel toward the aim direction. When complete and released, fires one bullet
-    /// (speed = swarm speed x 2, DEF = swarm DEF x 2, pierce 0) with execution time 0.
+    /// (speed = moving speed x 2 but at least 6, damage from the weapon data reduced by the target's DEF, pierce 0)
+    /// with execution time 0.
     /// </summary>
     public class GunAbility : ShapedAbility
     {
@@ -27,11 +29,11 @@ namespace Cellstorm.Weapons
             Vector2 aim = Owner.Host.AimDirection;
             Vector2 muzzle = Owner.Position + aim * (Owner.Radius + BarrelLength(CellCount) + 0.2f);
 
-            float speed = Owner.Stats.Speed * Data.bulletSpeedMultiplier * AbilityController.UnitsPerSpeedPoint;
-            float defense = Owner.Stats.Defense * Data.bulletDefMultiplier;
+            float speed = Mathf.Max(6f, SpeedMath.MoveSpeed(Owner.Stats.Speed) * Data.bulletSpeedMultiplier);
+            float damage = Data.damage * Owner.DamageMultiplier;
 
-            Bullet.Spawn(muzzle, aim, speed, defense, Data.pierce, Data.autoWin,
-                Owner.Faction, Owner.CellStyle.color, Data.bulletRadius, Owner.Stats.Cells);
+            Bullet.Spawn(muzzle, aim, speed, damage, Data.pierce,
+                Owner.Faction, Owner.CellStyle.color, Data.bulletRadius);
         }
     }
 }

@@ -50,16 +50,16 @@ namespace Cellstorm.Debugging
             }
 
             if (kb.iKey.wasPressedThisFrame) SpawnRanged();
-            if (kb.oKey.wasPressedThisFrame) SpawnWithWeapon("Jaw Cell", 20, WeaponDefaults.Jaw, EnemyBehavior.Chase, new Color(0.95f, 0.55f, 0.25f));
-            if (kb.pKey.wasPressedThisFrame) SpawnWithWeapon("Ram Cell", 10, WeaponDefaults.Ram, EnemyBehavior.Chase, new Color(0.95f, 0.85f, 0.25f));
+            if (kb.oKey.wasPressedThisFrame) SpawnWithWeapon("Jaw Cell", 100f, WeaponDefaults.Jaw, EnemyBehavior.Chase, new Color(0.95f, 0.55f, 0.25f));
+            if (kb.pKey.wasPressedThisFrame) SpawnWithWeapon("Ram Cell", 100f, WeaponDefaults.Ram, EnemyBehavior.Chase, new Color(0.95f, 0.85f, 0.25f));
         }
 
         void SpawnRanged()
         {
-            SpawnWithWeapon("Ranged Cell", 50, WeaponDefaults.EnemyGun, EnemyBehavior.KeepDistance, new Color(0.35f, 0.60f, 0.95f));
+            SpawnWithWeapon("Ranged Cell", 500f, WeaponDefaults.EnemyGun, EnemyBehavior.KeepDistance, new Color(0.35f, 0.60f, 0.95f));
         }
 
-        void SpawnWithWeapon(string label, int cells, WeaponSO weapon, EnemyBehavior behavior, Color color)
+        void SpawnWithWeapon(string label, float hp, WeaponSO weapon, EnemyBehavior behavior, Color color)
         {
             Vector2 dir = Random.insideUnitCircle.normalized;
             if (dir.sqrMagnitude < 0.01f) dir = Vector2.right;
@@ -69,15 +69,15 @@ namespace Cellstorm.Debugging
             {
                 name = label,
                 color = color,
-                maxCells = cells,
-                regen = 1f,
+                maxHp = hp,
                 defense = 1f,
                 speed = 1f,
+                contactDps = 10f,
+                damageMultiplier = 1f,
                 behavior = behavior,
                 preferredRange = 6f,
                 weapon = weapon,
                 scoreValue = 1,
-                scorePerCell = true,
                 milestone = 0
             };
             Enemy.Create(spec, pos);
@@ -107,7 +107,7 @@ namespace Cellstorm.Debugging
                 "6/7/8 = LMB Ram/Jaw/Gun (Shift = RMB)   9 = Hardening on Q (Shift = E)   0 = clear   " +
                 "I ranged enemy   O jaw enemy   P ram enemy   hold LMB/RMB to shape, release to fire");
             GUI.Label(new Rect(10, 275, 1400, 25),
-                "Tip: enemies have DEF 1 so their weapons tie with your DEF 2. Press , to lower your DEF to 1 and see them hurt you.");
+                "Tip: DEF reduces every hit you take. Press , or . to change your base DEF and watch the damage numbers (see the combat debug lines).");
         }
     }
 }

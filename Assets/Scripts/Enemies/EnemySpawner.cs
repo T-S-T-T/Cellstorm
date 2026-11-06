@@ -24,11 +24,17 @@ namespace Cellstorm.Enemies
         [Tooltip("Non-boss enemies farther than spawn distance x this are removed.")]
         [SerializeField] float despawnDistanceMultiplier = 2.5f;
 
-        [Header("Boss formula (GDD section 7.1)")]
-        [SerializeField] int cellsPerMilestone = 50;
-        [SerializeField] float regenDivisor = 100f;
+        [Header("Boss formula (GDD V0.1.1 section 7.1)")]
+        [Tooltip("Boss max HP = this x milestone number. Bosses never regenerate.")]
+        [SerializeField] float hpPerMilestone = 500f;
+        [Tooltip("Boss DEF = floor(this x milestone number).")]
         [SerializeField] float defensePerMilestone = 1.5f;
         [SerializeField] float bossSpeed = 5f;
+        [Tooltip("Boss contact damage in HP per second, before the milestone multiplier.")]
+        [SerializeField] float bossContactDps = 15f;
+        [Tooltip("Boss contact and weapon damage grows by this per milestone after the first (0.2 = +20%).")]
+        [SerializeField] float bossDamageGrowth = 0.2f;
+        [SerializeField] int bossScorePerMilestone = 500;
         [SerializeField] Color bossColor = new Color(0.80f, 0.25f, 0.85f, 1f);
         [Tooltip("Each boss picks one of these at random. Empty = built-in Ram, Jaw and Enemy Gun.")]
         [SerializeField] WeaponSO[] bossWeapons;
@@ -124,22 +130,22 @@ namespace Cellstorm.Enemies
 
         void SpawnBoss(int n)
         {
-            int maxCells = n * cellsPerMilestone;
+            float maxHp = n * hpPerMilestone;
             WeaponSO weapon = PickBossWeapon();
             bool ranged = weapon != null && weapon.type == WeaponType.Gun;
             var spec = new EnemySpec
             {
                 name = "Boss " + n,
                 color = bossColor,
-                maxCells = maxCells,
-                regen = maxCells / regenDivisor,
+                maxHp = maxHp,
                 defense = Mathf.Floor(n * defensePerMilestone),
                 speed = bossSpeed,
+                contactDps = bossContactDps,
+                damageMultiplier = 1f + bossDamageGrowth * (n - 1),
                 behavior = ranged ? EnemyBehavior.KeepDistance : EnemyBehavior.Chase,
                 preferredRange = 6f,
                 weapon = weapon,
-                scoreValue = 10,
-                scorePerCell = true,
+                scoreValue = bossScorePerMilestone * n,
                 expValue = 50 * n, // PLACEHOLDER
                 isBoss = true,
                 milestone = n

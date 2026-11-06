@@ -25,8 +25,6 @@ namespace Cellstorm.Weapons
     public class AbilityController : MonoBehaviour
     {
         public const int SlotCount = 4;
-        /// <summary>World units per point of the Speed stat (same value the movement code uses).</summary>
-        public const float UnitsPerSpeedPoint = 2.5f;
         public static readonly string[] SlotNames = { "LMB", "RMB", "Q", "E" };
 
         [Tooltip("Slots 0-1 weapons (LMB, RMB), slots 2-3 skills (Q, E).")]
@@ -48,6 +46,9 @@ namespace Cellstorm.Weapons
         Material _material;
 
         public SwarmStats Stats => _stats;
+
+        /// <summary>Multiplies the damage of every weapon this swarm uses (bosses: 1 + 0.2 x (milestone - 1)).</summary>
+        public float DamageMultiplier { get; set; } = 1f;
 
         /// <summary>Balance bot: read the player's slots from SetAiHeld instead of the keyboard.</summary>
         public bool BotControlled { get; set; }

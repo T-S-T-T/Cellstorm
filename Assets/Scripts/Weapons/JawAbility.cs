@@ -7,12 +7,13 @@ namespace Cellstorm.Weapons
 {
     /// <summary>
     /// Cells form a V-shaped open mouth toward the aim direction. On release the mouth snaps shut for
-    /// executeTime (0.1s) with DEF x2, eating everything in the cone that has lower DEF:
-    /// enemy swarms, enemy bullets and enemy weapon cells.
+    /// executeTime (0.1s) and hits everything in the cone once: enemy swarms take the weapon's damage (reduced by
+    /// their DEF), enemy bullets are destroyed and enemy weapon cells are broken.
     /// </summary>
     public class JawAbility : ShapedAbility
     {
         readonly List<Collider2D> _hits = new List<Collider2D>();
+        readonly HashSet<GameObject> _bitten = new HashSet<GameObject>();
 
         public JawAbility(AbilityController owner, WeaponSO data) : base(owner, data) { }
 
@@ -32,7 +33,7 @@ namespace Cellstorm.Weapons
 
         protected override void OnExecuteStart()
         {
-            AddExecuteModifier(StatType.Defense, ModifierOp.Multiply, Data.biteDefMultiplier);
+            _bitten.Clear();
             Bite();
         }
 
@@ -47,7 +48,6 @@ namespace Cellstorm.Weapons
             Vector2 aim = Owner.Host.AimDirection;
             float reach = Owner.Radius + Data.coneRange;
             float halfAngle = Data.coneAngle * 0.5f;
-            float myDef = Owner.Stats.Defense;
 
             var filter = ContactFilter2D.noFilter;
             filter.useTriggers = true;
@@ -69,28 +69,23 @@ namespace Cellstorm.Weapons
 
                 if (go.TryGetComponent<Bullet>(out var bullet))
                 {
-                    if (bullet.Faction != Owner.Faction && myDef > bullet.Defense) bullet.Kill();
+                    if (bullet.Faction != Owner.Faction) bullet.Kill();
                     continue;
                 }
 
                 if (go.TryGetComponent<WeaponCell>(out var cell))
                 {
-                    if (cell.Faction != Owner.Faction && myDef > cell.Defense) cell.Break();
+                    if (cell.Faction != Owner.Faction && _bitten.Add(go)) cell.Break();
                     continue;
                 }
 
                 if (go.TryGetComponent<SwarmCombat>(out var target))
                 {
                     if (target.Faction == Owner.Faction || target.Stats.IsDead) continue;
-                    float targetDef = target.Stats.Defense;
-                    if (myDef <= targetDef) continue;
+                    if (!_bitten.Add(go)) continue; // each target is bitten once per bite
 
-                    int damage = Data.autoWin
-                        ? target.Stats.Cells
-                        : Mathf.Max(1, Mathf.RoundToInt(DamageCalculator.ContactDps(
-                            Owner.Stats.Cells, myDef, target.Stats.Cells, targetDef)));
-
-                    target.Stats.TakeDamage(damage);
+                    target.Stats.TakeDamage(new DamageInfo(
+                        Data.damage * Owner.DamageMultiplier, DamageType.Bite, Owner.Faction, closest));
                     target.ReactToHit(closest);
                 }
             }

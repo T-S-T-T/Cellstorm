@@ -51,7 +51,7 @@ namespace Cellstorm.Debugging
             {
                 var all = new List<Enemy>(Enemy.Active);
                 foreach (var e in all)
-                    if (e != null) e.Stats.TakeDamage(int.MaxValue);
+                    if (e != null) e.Stats.TakeTrueDamage(1e9f);
             }
         }
 
@@ -110,7 +110,7 @@ namespace Cellstorm.Debugging
             float w = 420f, h = 18f;
             float x = (Screen.width - w) * 0.5f;
             float y = 12f;
-            float frac = Mathf.Clamp01((float)boss.Stats.Cells / boss.Stats.MaxCells);
+            float frac = Mathf.Clamp01(boss.Stats.Hp / boss.Stats.MaxHp);
 
             var old = GUI.color;
             GUI.color = new Color(0f, 0f, 0f, 0.6f);
@@ -120,7 +120,7 @@ namespace Cellstorm.Debugging
             GUI.color = old;
 
             GUI.Label(new Rect(x, y + h + 2f, w, 22f),
-                boss.name + (boss.Spec.weapon != null ? " [" + boss.Spec.weapon.displayName + "]" : "") + $"   {boss.Stats.Cells}/{boss.Stats.MaxCells}   DEF {boss.Stats.Defense:F0}", _center);
+                boss.name + (boss.Spec.weapon != null ? " [" + boss.Spec.weapon.displayName + "]" : "") + $"   {boss.Stats.Hp:F0}/{boss.Stats.MaxHp:F0}   DEF {boss.Stats.Defense:F0}", _center);
         }
     }
 }
