@@ -13,9 +13,10 @@ using UnityEngine.InputSystem;
 namespace Cellstorm.UI
 {
     /// <summary>
-    /// The in-run HUD from the GDD: menu button (top left), heart with cell count and a blue DEF shield
-    /// (bottom middle), DEF number to its right, 2 weapon slots to its left and 2 skill slots to its right with
-    /// pie overlays for cooldown and execution, an EXP arrow (top right) and the boss bar (top middle).
+    /// The in-run HUD (GDD V0.1.1): menu button (top left), a health bar with current / max numbers whose left end
+    /// is highlighted for the HP held by deployed weapon cells (bottom middle), 2 weapon slots to its left and
+    /// 2 skill slots to its right with pie overlays for cooldown and execution, an EXP arrow (top right) and the
+    /// boss bar (top middle). DEF is not shown anywhere.
     /// F12 toggles the debug text overlays, F11 unlocks everything for testing.
     /// </summary>
     public class GameHud : MonoBehaviour
@@ -73,8 +74,11 @@ namespace Cellstorm.UI
             var kb = Keyboard.current;
             if (kb != null)
             {
-                if (kb.f12Key.wasPressedThisFrame) DebugVisibility.Show = !DebugVisibility.Show;
-                if (kb.f11Key.wasPressedThisFrame) UnlockState.UnlockEverything = !UnlockState.UnlockEverything;
+                if (DebugGate.Allowed)
+                {
+                    if (kb.f12Key.wasPressedThisFrame) DebugVisibility.Show = !DebugVisibility.Show;
+                    if (kb.f11Key.wasPressedThisFrame) UnlockState.UnlockEverything = !UnlockState.UnlockEverything;
+                }
             }
 
             if (Time.unscaledTime >= _nextKeyRefresh)
@@ -110,8 +114,8 @@ namespace Cellstorm.UI
             if (_hurtFlash > 0.001f)
                 UiDraw.Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.9f, 0.1f, 0.1f, 0.28f * _hurtFlash));
 
-            DrawHeart(stats);
-            DrawDef(stats);
+            DrawHealthBar(stats);
+            DrawStatusIcons(stats);
             DrawSlots(abilities);
             DrawExp();
             bool boss = DrawBossBar();
@@ -125,40 +129,71 @@ namespace Cellstorm.UI
             else DrawSlotTooltip(abilities);
         }
 
-        // ---------------- Heart, DEF ----------------
+        // ---------------- Health bar ----------------
 
-        void DrawHeart(SwarmStats stats)
+        static readonly Color BarBack = new Color(0.16f, 0.04f, 0.06f, 0.95f);
+        static readonly Color BarFill = new Color(0.90f, 0.15f, 0.22f, 1f);
+        static readonly Color BarHeld = new Color(1.00f, 0.62f, 0.15f, 1f);
+
+        /// <summary>
+        /// Fill = Hp / max HP. The highlighted left end is the HP held by deployed weapon cells (HeldHp / max HP).
+        /// Text shows "current / max" so a weapon being deployed is visible as a number too.
+        /// </summary>
+        void DrawHealthBar(SwarmStats stats)
         {
-            var r = HudLayout.Heart();
+            var r = HudLayout.HealthBar();
+            float max = Mathf.Max(1f, stats.MaxHp);
 
-            // Blue shield layer around the heart (brighter while DEF is boosted).
-            bool boosted = stats.Defense > stats.BaseDefense + 0.01f;
-            var halo = new Rect(r.center.x - r.width * 0.64f, r.center.y - r.height * 0.62f, r.width * 1.28f, r.height * 1.28f);
-            GUI.color = new Color(0.25f, 0.55f, 1f, boosted ? 0.95f : 0.55f);
-            GUI.DrawTexture(halo, HudTextures.Heart);
+            UiDraw.Fill(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), new Color(0f, 0f, 0f, 0.7f));
+            UiDraw.Fill(r, BarBack);
 
-            // Empty heart, then the filled part from the bottom (HP / max HP). Phase 5 replaces the heart by a health bar.
-            GUI.color = new Color(0.22f, 0.05f, 0.08f, 1f);
-            GUI.DrawTexture(r, HudTextures.Heart);
+            float f = Mathf.Clamp01(stats.Hp / max);
+            UiDraw.Fill(new Rect(r.x, r.y, r.width * f, r.height), BarFill);
 
-            float f = Mathf.Clamp01(stats.Hp / Mathf.Max(1f, stats.MaxHp));
-            var fill = new Rect(r.x, r.yMax - r.height * f, r.width, r.height * f);
-            GUI.color = new Color(0.90f, 0.15f, 0.22f, 1f);
-            GUI.DrawTextureWithTexCoords(fill, HudTextures.Heart, new Rect(0f, 0f, 1f, f));
-            GUI.color = Color.white;
+            float held = Mathf.Clamp01(stats.HeldHp / max);
+            if (held > 0.0005f)
+            {
+                float pulse = 0.8f + 0.2f * Mathf.Sin(Time.unscaledTime * 8f);
+                var c = BarHeld;
+                c.a = pulse;
+                UiDraw.Fill(new Rect(r.x, r.y, Mathf.Max(3f, r.width * held), r.height), c);
+            }
 
-            GUI.Label(r, Mathf.CeilToInt(stats.Hp).ToString(), UiStyles.HeartText);
-            GUI.Label(new Rect(r.x, r.y - 22f, r.width, 20f), "max " + Mathf.RoundToInt(stats.MaxHp), UiStyles.SmallCenter);
-        }
-
-        void DrawDef(SwarmStats stats)
-        {
-            float d = stats.Defense;
-            string text = Mathf.Approximately(d, Mathf.Round(d)) ? ((int)d).ToString() : d.ToString("0.#");
-            GUI.Label(HudLayout.DefLabel(), "DEF " + text, UiStyles.DefText);
+            string text = Mathf.CeilToInt(stats.Hp) + " / " + Mathf.RoundToInt(max);
+            if (stats.HeldHp > 0.5f) text += "    (" + Mathf.CeilToInt(stats.HeldHp) + " in weapon)";
+            GUI.Label(r, text, UiStyles.LabelCenter);
         }
 
         // ---------------- Slots ----------------
+
+        /// <summary>Small icons above the health bar for the player's active effects, each with a timer ring.</summary>
+        void DrawStatusIcons(SwarmStats stats)
+        {
+            if (stats == null) return;
+            var st = stats.Status;
+            var bar = HudLayout.HealthBar();
+            const float size = 30f;
+            float y = bar.y - size - 8f;
+
+            int n = (st.ToxicActive ? 1 : 0) + (st.SlowActive ? 1 : 0) + (st.Stunned ? 1 : 0);
+            if (n == 0) return;
+            float x = bar.center.x - (n * size + (n - 1) * 6f) * 0.5f;
+
+            if (st.ToxicActive) { StatusIcon(new Rect(x, y, size, size), "T", new Color(0.25f, 0.85f, 0.25f), st.ToxicFraction); x += size + 6f; }
+            if (st.SlowActive) { StatusIcon(new Rect(x, y, size, size), "S", new Color(0.30f, 0.55f, 1f), st.SlowFraction); x += size + 6f; }
+            if (st.Stunned) StatusIcon(new Rect(x, y, size, size), "Z", new Color(1f, 0.9f, 0.2f), st.StunFraction);
+        }
+
+        static void StatusIcon(Rect r, string glyph, Color color, float fraction)
+        {
+            UiDraw.Fill(r, new Color(color.r * 0.35f, color.g * 0.35f, color.b * 0.35f, 0.95f));
+            var old = GUI.color;
+            GUI.color = new Color(color.r, color.g, color.b, 0.55f);
+            GUI.DrawTexture(r, HudTextures.Pie(fraction));
+            GUI.color = old;
+            UiDraw.Border(r, 2f, color);
+            GUI.Label(r, glyph, UiStyles.Glyph);
+        }
 
         void DrawSlots(AbilityController abilities)
         {
@@ -182,6 +217,13 @@ namespace Cellstorm.UI
                 case WeaponType.Ram: return "RAM";
                 case WeaponType.Jaw: return "JAW";
                 case WeaponType.Gun: return "GUN";
+                case WeaponType.Whip: return "WHP";
+                case WeaponType.SpreadShot: return "SPR";
+                case WeaponType.SporeCloud: return "SPO";
+                case WeaponType.Mine: return "MIN";
+                case WeaponType.Minion: return "MNN";
+                case WeaponType.Convert: return "CNV";
+                case WeaponType.Shockwave: return "SHK";
                 default: return "HRD";
             }
         }
@@ -221,6 +263,10 @@ namespace Cellstorm.UI
                 GUI.DrawTexture(inner, HudTextures.Pie(fill));
                 GUI.color = old;
             }
+
+            // Minion: a red tint while the main swarm's HP is too low to pay for it.
+            if (a is MinionAbility minion && !minion.CanAfford)
+                UiDraw.Fill(inner, new Color(0.9f, 0.1f, 0.1f, 0.5f));
 
             GUI.Label(new Rect(inner.x, inner.y + 6f, inner.width, inner.height * 0.5f), GlyphFor(a.Data.type), UiStyles.Glyph);
             if (a.Phase == AbilityPhase.Cooldown)
@@ -271,7 +317,7 @@ namespace Cellstorm.UI
             UiDraw.Fill(new Rect(x, y, w * f, h), boss.Spec.color);
 
             string label = boss.name + (boss.Spec.weapon != null ? "  [" + boss.Spec.weapon.displayName + "]" : "");
-            GUI.Label(new Rect(x, y + h + 2f, w, 22f), label + "    DEF " + boss.Stats.Defense.ToString("0"), UiStyles.SmallCenter);
+            GUI.Label(new Rect(x, y + h + 2f, w, 22f), label, UiStyles.SmallCenter);
             return true;
         }
 
@@ -295,9 +341,12 @@ namespace Cellstorm.UI
                 GUI.enabled = true;
             }
 
-            string note = "F12: debug text";
-            if (UnlockState.UnlockEverything) note += "   [ALL UNLOCKED - F11]";
-            GUI.Label(new Rect(14f, 52f, 400f, 20f), note, UiStyles.Small);
+            if (DebugGate.Allowed)
+            {
+                string note = "F12: debug text";
+                if (UnlockState.UnlockEverything) note += "   [ALL UNLOCKED - F11]";
+                GUI.Label(new Rect(14f, 52f, 400f, 20f), note, UiStyles.Small);
+            }
         }
 
         void DrawSlotTooltip(AbilityController abilities)
@@ -314,8 +363,14 @@ namespace Cellstorm.UI
                 var a = abilities.GetSlot(i);
                 if (a == null) return;
 
-                string text = a.Data.displayName + "\n" + a.Data.description + "\nCooldown " + a.Data.cooldown.ToString("0.#") + "s" +
-                              (a.Data.shapeTime > 0f ? "   Shape time " + a.Data.shapeTime.ToString("0.#") + "s" : "");
+                bool timed = WeaponTags.IsCellWeapon(a.Data.type);
+                float speed = abilities.Stats.Speed;
+                float cdBase = abilities.Mods.Get(Param.Cooldown, a.Data, a.Data.cooldown);
+                float cd = timed ? SpeedMath.Scaled(cdBase, speed) : cdBase;
+                float shape = abilities.Mods.Get(Param.ShapeTime, a.Data, a.Data.shapeTime);
+                string text = a.Data.displayName + "\n" + a.Data.description + "\nCooldown " + cd.ToString("0.#") + "s" +
+                              (a.Data.shapeTime > 0f ? "   Deploy " + SpeedMath.Scaled(shape, speed).ToString("0.#") + "s" : "") +
+                              (a.Data.cellShare > 0f ? "   Holds " + Mathf.RoundToInt(abilities.HpCostFraction(a.Data) * 100f) + "% max HP" : "");
                 var box = new Rect(Mathf.Clamp(r.center.x - 160f, 8f, Screen.width - 328f), r.y - 104f, 320f, 96f);
                 UiDraw.Fill(box, new Color(0f, 0f, 0f, 0.78f));
                 GUI.Label(new Rect(box.x + 8f, box.y + 4f, box.width - 16f, box.height - 8f), text, UiStyles.SmallCenter);
@@ -361,7 +416,7 @@ namespace Cellstorm.UI
                 ? "SWAP MODE - click a weapon or skill to pick it up.   F or Esc to leave."
                 : "Press " + _keys[0] + " / " + _keys[1] + " to place a weapon, or " + _keys[2] + " / " + _keys[3] +
                   " to place a skill. An occupied slot swaps with it.";
-            GUI.Label(new Rect(0f, HudLayout.Heart().y - 150f, Screen.width, 30f), text, UiStyles.LabelCenter);
+            GUI.Label(new Rect(0f, HudLayout.HealthBar().y - 150f, Screen.width, 30f), text, UiStyles.LabelCenter);
         }
     }
 }

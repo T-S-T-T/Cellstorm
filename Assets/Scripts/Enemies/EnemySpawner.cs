@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using Cellstorm.Core;
 using Cellstorm.Data;
@@ -39,10 +40,28 @@ namespace Cellstorm.Enemies
         [Tooltip("Each boss picks one of these at random. Empty = built-in Ram, Jaw and Enemy Gun.")]
         [SerializeField] WeaponSO[] bossWeapons;
 
+        // Runtime copy of the table (so adding the support cell to an old table never edits the asset).
+        readonly List<SpawnTableSO.Entry> _entries = new List<SpawnTableSO.Entry>();
         float[] _accumulators = new float[0];
         float _nextSweep;
         SwarmBody _player;
         bool _warnedFallback;
+
+        /// <summary>Debug: spawn a regular enemy of a type next to a position.</summary>
+        public Enemy DebugSpawn(EnemyTypeSO type, Vector2 position)
+        {
+            return Enemy.Create(BuildRegular(type, CurrentMilestone()), position);
+        }
+
+        /// <summary>Debug / tools: every enemy type of the table (including the support cell).</summary>
+        public List<EnemyTypeSO> AllTypes()
+        {
+            EnsureTable();
+            var list = new List<EnemyTypeSO>();
+            foreach (var e in _entries)
+                if (e != null && e.type != null) list.Add(e.type);
+            return list;
+        }
 
         public int NonBossCount => Enemy.CountNonBoss();
         public int MaxEnemies => maxEnemies;
@@ -79,14 +98,14 @@ namespace Cellstorm.Enemies
             EnsureTable();
             int milestone = CurrentMilestone();
 
-            if (_accumulators.Length != table.entries.Length)
-                _accumulators = new float[table.entries.Length];
+            if (_accumulators.Length != _entries.Count)
+                _accumulators = new float[_entries.Count];
 
             int count = Enemy.CountNonBoss();
 
-            for (int i = 0; i < table.entries.Length; i++)
+            for (int i = 0; i < _entries.Count; i++)
             {
-                var entry = table.entries[i];
+                var entry = _entries[i];
                 if (entry == null || entry.type == null) continue;
 
                 _accumulators[i] += entry.RateAt(milestone) * dt;
@@ -120,19 +139,80 @@ namespace Cellstorm.Enemies
 
         void SpawnRegular(EnemyTypeSO type, int milestone)
         {
-            var spec = EnemySpec.FromType(type, milestone);
-
-            // GDD: in endless mode every non-boss enemy has DEF = milestone - 5.
-            spec.defense = Mathf.Max(spec.defense, milestone - 5);
-
-            Enemy.Create(spec, RandomRingPosition());
+            Enemy.Create(BuildRegular(type, milestone), RandomRingPosition());
         }
 
-        void SpawnBoss(int n)
+        /// <summary>The spec of a regular enemy for a milestone (endless mode adds DEF).</summary>
+        public EnemySpec BuildRegular(EnemyTypeSO type, int milestone)
+        {
+            var spec = EnemySpec.FromType(type, milestone);
+
+            // GDD: in endless mode (milestone 7 and above) every non-boss enemy has DEF = milestone - 5 when that is higher.
+            if (milestone >= 7) spec.defense = Mathf.Max(spec.defense, milestone - 5);
+            return spec;
+        }
+
+        // ---------------- Used by the resource point director ----------------
+
+        /// <summary>Types that currently spawn (rate above 0) at this milestone.</summary>
+        public void TypesAt(int milestone, List<EnemyTypeSO> into)
+        {
+            EnsureTable();
+            into.Clear();
+            foreach (var e in _entries)
+                if (e != null && e.type != null && e.RateAt(milestone) > 0f && e.type.behavior != EnemyBehavior.Support)
+                    into.Add(e.type);
+            if (into.Count == 0 && _entries.Count > 0 && _entries[0].type != null) into.Add(_entries[0].type);
+        }
+
+        /// <summary>A random normal type from the spawn row, weighted by spawn rate.</summary>
+        public EnemyTypeSO PickNormalType(int milestone)
+        {
+            EnsureTable();
+            float total = 0f;
+            foreach (var e in _entries)
+                if (e != null && e.type != null && e.type.behavior != EnemyBehavior.Support) total += e.RateAt(milestone);
+            if (total <= 0f) return _entries.Count > 0 ? _entries[0].type : null;
+
+            float r = Random.value * total;
+            foreach (var e in _entries)
+            {
+                if (e == null || e.type == null || e.type.behavior == EnemyBehavior.Support) continue;
+                r -= e.RateAt(milestone);
+                if (r <= 0f) return e.type;
+            }
+            return _entries[0].type;
+        }
+
+        /// <summary>The toughest type (highest max HP) in the spawn row.</summary>
+        public EnemyTypeSO ToughestType(int milestone)
+        {
+            var list = new List<EnemyTypeSO>();
+            TypesAt(milestone, list);
+            EnemyTypeSO best = null;
+            foreach (var t in list)
+                if (best == null || t.maxHp > best.maxHp) best = t;
+            return best;
+        }
+
+        /// <summary>Spawns a guard at a position (bypasses the 50-enemy cap). Elites get hp/damage multipliers.</summary>
+        public Enemy SpawnGuard(EnemyTypeSO type, int milestone, Vector2 position, Vector2 pointCenter, float hpMultiplier, float damageMultiplier)
+        {
+            var spec = BuildRegular(type, milestone);
+            spec.maxHp *= hpMultiplier;
+            spec.damageMultiplier = damageMultiplier;
+            var e = Enemy.Create(spec, position);
+            e.MakeGuard(pointCenter);
+            return e;
+        }
+
+        public Vector2 PlayerPosition => _player != null ? (Vector2)_player.transform.position : Vector2.zero;
+
+        public Enemy SpawnBoss(int n, WeaponSO forcedWeapon = null, Vector2? at = null)
         {
             float maxHp = n * hpPerMilestone;
-            WeaponSO weapon = PickBossWeapon();
-            bool ranged = weapon != null && weapon.type == WeaponType.Gun;
+            WeaponSO weapon = forcedWeapon != null ? forcedWeapon : PickBossWeapon();
+            bool ranged = weapon != null && (weapon.type == WeaponType.Gun || weapon.type == WeaponType.SpreadShot);
             var spec = new EnemySpec
             {
                 name = "Boss " + n,
@@ -150,22 +230,27 @@ namespace Cellstorm.Enemies
                 isBoss = true,
                 milestone = n
             };
-            Enemy.Create(spec, RandomRingPosition());
+            return Enemy.Create(spec, at ?? RandomRingPosition());
         }
 
+        /// <summary>
+        /// A random boss weapon from Ram, Jaw, Gun, Whip, Spread Shot, Spore Cloud and Mine (GDD V0.2 section 7.2).
+        /// Scene assets that predate V0.2 only list three, so the missing types come from the built-in defaults.
+        /// </summary>
         WeaponSO PickBossWeapon()
         {
-            if (bossWeapons != null && bossWeapons.Length > 0)
+            var pool = new List<WeaponSO>();
+            if (bossWeapons != null)
+                foreach (var w in bossWeapons)
+                    if (w != null) pool.Add(w);
+            foreach (var def in WeaponDefaults.BossPool())
             {
-                var w = bossWeapons[Random.Range(0, bossWeapons.Length)];
-                if (w != null) return w;
+                bool have = false;
+                foreach (var w in pool)
+                    if (w.type == def.type) { have = true; break; }
+                if (!have) pool.Add(def);
             }
-            switch (Random.Range(0, 3))
-            {
-                case 0: return WeaponDefaults.Ram;
-                case 1: return WeaponDefaults.Jaw;
-                default: return WeaponDefaults.EnemyGun;
-            }
+            return pool[Random.Range(0, pool.Count)];
         }
 
         Vector2 RandomRingPosition()
@@ -193,7 +278,7 @@ namespace Cellstorm.Enemies
             for (int i = Enemy.Active.Count - 1; i >= 0; i--)
             {
                 var e = Enemy.Active[i];
-                if (e == null || e.IsBoss) continue;
+                if (e == null || e.IsBoss || e.IsGuard) continue;     // guards never despawn by distance
                 if (((Vector2)e.transform.position - p).sqrMagnitude > limitSqr) e.Despawn();
             }
         }
@@ -205,15 +290,32 @@ namespace Cellstorm.Enemies
 
         void EnsureTable()
         {
-            if (table != null && table.entries != null && table.entries.Length > 0) return;
+            if (_entries.Count > 0) return;
 
-            if (!_warnedFallback)
+            if (table == null || table.entries == null || table.entries.Length == 0)
             {
-                _warnedFallback = true;
-                Debug.LogWarning("EnemySpawner: no Spawn Table assigned, using built-in GDD defaults. " +
-                                 "Run Cellstorm > Phase 3 > Setup Game Scene to create editable assets.");
+                if (!_warnedFallback)
+                {
+                    _warnedFallback = true;
+                    Debug.LogWarning("EnemySpawner: no Spawn Table assigned, using built-in GDD defaults. " +
+                                     "Run Cellstorm > Data > Regenerate data to create editable assets.");
+                }
+                table = EnemyDefaults.CreateTable(EnemyDefaults.CreateTypes());
             }
-            table = EnemyDefaults.CreateTable(EnemyDefaults.CreateTypes());
+
+            bool hasSupport = false;
+            foreach (var e in table.entries)
+            {
+                if (e == null || e.type == null) continue;
+                _entries.Add(e);
+                if (e.type.behavior == EnemyBehavior.Support) hasSupport = true;
+            }
+
+            // Tables made before V0.2 have no support cell: add it with the GDD rates (until the data is regenerated).
+            if (!hasSupport)
+            {
+                _entries.Add(new SpawnTableSO.Entry { type = EnemyDefaults.CreateSupport(), ratesPerSecond = EnemyDefaults.SupportRates });
+            }
         }
 
         /// <summary>Debug text: current spawn rates per second.</summary>
@@ -222,9 +324,9 @@ namespace Cellstorm.Enemies
             EnsureTable();
             int milestone = CurrentMilestone();
             var sb = new StringBuilder();
-            for (int i = 0; i < table.entries.Length; i++)
+            for (int i = 0; i < _entries.Count; i++)
             {
-                var e = table.entries[i];
+                var e = _entries[i];
                 if (e == null || e.type == null) continue;
                 if (sb.Length > 0) sb.Append("   ");
                 sb.Append(e.type.displayName).Append(' ').Append(e.RateAt(milestone).ToString("0.0#"));

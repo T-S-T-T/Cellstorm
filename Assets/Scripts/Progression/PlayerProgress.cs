@@ -20,7 +20,7 @@ namespace Cellstorm.Progression
         }
 
         [SerializeField] UpgradePoolSO pool;
-        [SerializeField, Min(1)] int optionCount = 3;
+        [SerializeField, Min(1)] int optionCount = 6;     // kept for old scenes; V0.2 uses OptionCount below
         [SerializeField] float firstLevelExp = 10f;
         [SerializeField] float levelGrowth = 1.1f;
 
@@ -29,11 +29,20 @@ namespace Cellstorm.Progression
         UpgradeSO[] _fallbackPool;
         PlayerBuild _build;
 
+        /// <summary>Options offered per level-up: 6 (GDD V0.2 section 6.2). The debug panel can change it.</summary>
+        public static int OptionCountSetting { get; set; } = 6;
+
+        /// <summary>Debug: the level-up screen lists every eligible upgrade (scrolling grid) instead of 3 random ones.</summary>
+        public static bool DebugShowAll { get; set; }
+
         public int LevelsGained { get; private set; }
         public int Exp { get; private set; }
         public int Rerolls { get; private set; }
         public int PendingLevelUps { get; private set; }
         public IReadOnlyList<UpgradeSO> Options => _options;
+
+        /// <summary>Every upgrade of the pool (debug panel).</summary>
+        public UpgradeSO[] AllUpgrades => Pool;
 
         public int ExpToNext => Mathf.CeilToInt(firstLevelExp * Mathf.Pow(levelGrowth, LevelsGained));
 
@@ -41,12 +50,14 @@ namespace Cellstorm.Progression
         {
             get
             {
-                if (pool != null && pool.upgrades != null && pool.upgrades.Length > 0) return pool.upgrades;
+                // An asset pool made before V0.2 has no cards: use the built-in V0.2 list until the data is regenerated.
+                if (pool != null && pool.upgrades != null && pool.upgrades.Length > 0 && pool.version >= UpgradePoolSO.CurrentVersion)
+                    return pool.upgrades;
                 if (_fallbackPool == null)
                 {
-                    Debug.LogWarning("PlayerProgress: no Upgrade Pool assigned, using built-in GDD defaults. " +
-                                     "Run Cellstorm > Phase 5 > Setup Game Scene to create editable assets.");
-                    _fallbackPool = UpgradeDefaults.CreateAll(WeaponDefaults.Jaw, WeaponDefaults.Gun, WeaponDefaults.Hardening);
+                    Debug.LogWarning("PlayerProgress: the Upgrade Pool asset is missing or from before V0.2, using the built-in V0.2 " +
+                                     "upgrade list. Run Cellstorm > Data > Regenerate data to create editable assets.");
+                    _fallbackPool = UpgradeDefaults.CreateAll();
                 }
                 return _fallbackPool;
             }
@@ -112,17 +123,31 @@ namespace Cellstorm.Progression
                 if (_build.IsEligible(u)) eligible.Add(u);
 
             // On rerolls, avoid showing the same options again when there are enough alternatives.
-            if (_lastOptions.Count > 0 && eligible.Count - _lastOptions.Count >= optionCount)
+            if (_lastOptions.Count > 0 && eligible.Count - _lastOptions.Count >= OptionCountSetting)
                 eligible.RemoveAll(u => _lastOptions.Contains(u));
 
             _options.Clear();
-            int picks = Mathf.Min(optionCount, eligible.Count);
+            if (DebugShowAll)
+            {
+                eligible.Sort((a, b) => a.category != b.category ? a.category.CompareTo(b.category) : string.CompareOrdinal(a.id, b.id));
+                _options.AddRange(eligible);
+                return;
+            }
+            int picks = Mathf.Min(OptionCountSetting, eligible.Count);
             for (int i = 0; i < picks; i++)
             {
                 int index = Random.Range(0, eligible.Count);
                 _options.Add(eligible[index]);
                 eligible.RemoveAt(index);
             }
+        }
+
+        /// <summary>Rebuild the options (used when the debug show-all switch changes during a level-up).</summary>
+        public void RefreshOptions()
+        {
+            if (PendingLevelUps <= 0 || _build == null) return;
+            _lastOptions.Clear();
+            RollOptions();
         }
 
         /// <summary>Spend one reroll to get a new set of options.</summary>
@@ -136,7 +161,7 @@ namespace Cellstorm.Progression
             return true;
         }
 
-        /// <summary>Take an option. For weapons and skills with no free slot, pass the slot to replace.</summary>
+        /// <summary>Take an option. Weapons and skills need the slot the player chose (0-1 weapons, 2-3 skills).</summary>
         public bool Choose(UpgradeSO u, int replaceSlot = -1)
         {
             if (u == null || !_options.Contains(u) || _build == null) return false;

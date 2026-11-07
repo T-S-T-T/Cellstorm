@@ -19,5 +19,11 @@ namespace Cellstorm.Data
         [Min(0.1f)] public float sizeMultiplier = 1f;
         [Tooltip("Cells spawned by Jaw and Gun. 100 by default, 200 for Giant. Used from Phase 4.")]
         [Min(1)] public int weaponCellCount = 100;
+
+        [Header("Starting items (V0.2)")]
+        [Tooltip("WeaponDefaults key of a weapon that replaces Ram on LMB, or empty. Sporer: spore_cloud.")]
+        public string startWeaponKey = "";
+        [Tooltip("WeaponDefaults key of a skill for the Q slot, or empty. Swarmer: minion.")]
+        public string startSkillKey = "";
     }
 }

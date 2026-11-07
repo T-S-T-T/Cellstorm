@@ -26,6 +26,7 @@ namespace Cellstorm.Meta
         bool _won;
         int _enemies;
         int _bosses;
+        int _bossMask;
         float _nextCapture;
 
         public RunSummary Summary { get; private set; }
@@ -61,7 +62,11 @@ namespace Cellstorm.Meta
         void OnEnemyKilled(Enemy e)
         {
             _enemies++;
-            if (e.IsBoss) _bosses++;
+            if (e.IsBoss)
+            {
+                _bosses++;
+                _bossMask |= 1 << Mathf.Clamp(e.Spec.milestone, 0, 30);       // "Defeat Boss N" counts when it dies
+            }
         }
 
         void OnStateChanged(GameState previous, GameState current)
@@ -112,6 +117,7 @@ namespace Cellstorm.Meta
                 loadout = RunSetup.SelectedLoadout,
                 enemiesDefeated = _enemies,
                 bossesDefeated = _bosses,
+                bossMask = _bossMask,
                 date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm")
             };
 
@@ -123,6 +129,7 @@ namespace Cellstorm.Meta
                 r.defense = s.Defense;
                 r.speed = s.Speed;
                 r.weapons = DescribeAbilities(build.Abilities);
+                r.evolutions = build.DescribeEvolutions();
             }
             else
             {
@@ -131,6 +138,7 @@ namespace Cellstorm.Meta
                 r.defense = _snapshot.defense;
                 r.speed = _snapshot.speed;
                 r.weapons = _snapshot.weapons;
+                r.evolutions = _snapshot.evolutions;
             }
             return r;
         }

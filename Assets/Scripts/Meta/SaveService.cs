@@ -50,7 +50,9 @@ namespace Cellstorm.Meta
 
             // Save version 2 (V0.1.1): leaderboard rows gained maxHp. V0.1 rows keep maxCells and show "-" for HP.
             // Unlocks, high score and lifetime score carry over because score values did not change.
-            if (_data.version < 2) _data.version = 2;
+            // Save version 3 (V0.2): runs also store the bosses defeated and the evolutions taken; achievements are ids in 'unlocked'.
+            // V0.1.1 saves load unchanged and the new unlocks (Spread Shot, Minion, ... and the achievements) start locked.
+            if (_data.version < 3) _data.version = 3;
             if (_data.unlocked == null) _data.unlocked = new List<string>();
             if (_data.leaderboard == null) _data.leaderboard = new List<RunRecord>();
             if (_data.stats == null) _data.stats = new Statistics();
@@ -102,7 +104,7 @@ namespace Cellstorm.Meta
             if (d.leaderboard.Count > MaxLeaderboard)
                 d.leaderboard.RemoveRange(MaxLeaderboard, d.leaderboard.Count - MaxLeaderboard);
 
-            newlyUnlocked = UnlockCatalog.Evaluate(d.totalScore, d.unlocked);
+            newlyUnlocked = UnlockCatalog.Evaluate(d.totalScore, d.unlocked, run);
             Save();
             return newlyUnlocked;
         }

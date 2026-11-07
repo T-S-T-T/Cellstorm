@@ -23,6 +23,15 @@ namespace Cellstorm.Meta
         public int enemiesDefeated;
         public int bossesDefeated;
         public string date = "";
+        /// <summary>V0.2: bit N is set when Boss N was defeated in this run (achievements).</summary>
+        public int bossMask;
+        /// <summary>V0.2: evolutions taken, for example "Tank, Toxic".</summary>
+        public string evolutions = "";
+
+        public bool DefeatedBoss(int n)
+        {
+            return n >= 0 && n < 31 && (bossMask & (1 << n)) != 0;
+        }
     }
 
     [Serializable]
@@ -40,7 +49,7 @@ namespace Cellstorm.Meta
     [Serializable]
     public class SaveData
     {
-        public int version = 2;
+        public int version = 3;
         public int highScore;
         /// <summary>Lifetime score across all runs. Unlocks use this (not spent).</summary>
         public int totalScore;

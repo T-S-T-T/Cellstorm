@@ -21,7 +21,13 @@ namespace Cellstorm.Data
         /// <summary>Equip a weapon or skill.</summary>
         GrantWeapon,
         /// <summary>The Tank evolution.</summary>
-        EvolveTank
+        EvolveTank,
+        /// <summary>Potent Cells (V0.1.1, old assets only). V0.2 uses a Card.</summary>
+        PotentCells,
+        /// <summary>V0.2: an upgrade card boosting aspects of weapons and skills (CardEffect list).</summary>
+        Card,
+        /// <summary>V0.2: a one-time evolution with a condition and a lock-out list.</summary>
+        Evolution
     }
 
     /// <summary>One level-up option.</summary>
@@ -64,9 +70,54 @@ namespace Cellstorm.Data
         public float secondaryPercent = 0f;
         public WeaponSO weapon;
 
+        [Header("Potent Cells")]
+        [Tooltip("Share of max HP a deployed weapon holds (replaces the weapon's own 10%).")]
+        public float potentCostFraction = 0.3f;
+        [Tooltip("Multiplier on the damage of every weapon.")]
+        public float potentDamageMultiplier = 1.5f;
+
+        [Header("V0.2 card: who it applies to")]
+        [Tooltip("Specific cards: the weapon or skill types it applies to (they must be owned).")]
+        public WeaponType[] targetTypes;
+        [Tooltip("Shared cards: applies to every owned item with any of these tags.")]
+        public WeaponTag targetTags;
+        [Tooltip("Applies to everything (evolutions).")]
+        public bool appliesToAll;
+        public CardEffect[] effects;
+        [Tooltip("0 = no cap. Once-only cards use repeatable = false.")]
+        public int maxStacks;
+        public StackForm form = StackForm.Additive;
+        [Tooltip("Counted by evolutions: 'minion' or 'projectile'.")]
+        public string cardGroup;
+        [Tooltip("Shown in the tooltip, for example '+15% damage of base per stack'.")]
+        public string stackText;
+
+        [Header("V0.2 evolution")]
+        public EvoKind evo = EvoKind.None;
+        public EvoCondition condition = EvoCondition.Stacks;
+        [Tooltip("Stacks: id of the card. WeaponAndCards: the card group name.")]
+        public string requirementId;
+        public int requirementCount = 1;
+        [Tooltip("WeaponAndCards / BossReward: owning any of these weapons or skills is needed.")]
+        public WeaponType[] requiredAnyOwned;
+        [Tooltip("Ids of evolutions that block this one (and that this one blocks).")]
+        public string[] lockoutIds;
+        [Tooltip("Swarm evolution: multiplier on max HP (0.8).")]
+        public float evoMaxHpMultiplier = 1f;
+
         [Header("Evolution (Tank)")]
         public float evolutionDefMultiplier = 5f;
         [Tooltip("Multiplier on the effect of Max HP and Regen upgrades taken after evolving.")]
         public float evolutionGrowthEffect = 0.5f;
+
+        /// <summary>Tooltip line about stacking: the rule and how many the player owns.</summary>
+        public string StackLine(int owned)
+        {
+            string rule = !string.IsNullOrEmpty(stackText) ? stackText : "";
+            string cap = maxStacks > 0 ? owned + " of " + maxStacks : (repeatable ? owned + " owned" : (owned > 0 ? "owned" : "one-time"));
+            if (!repeatable && owned == 0) cap = "one-time";
+            return (rule.Length > 0 ? rule + "  |  " : "") + cap;
+        }
     }
 }
+

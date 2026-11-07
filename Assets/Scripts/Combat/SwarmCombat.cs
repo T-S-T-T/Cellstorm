@@ -1,5 +1,6 @@
 using Cellstorm.Core;
 using Cellstorm.Swarm;
+using Cellstorm.Weapons;
 using UnityEngine;
 
 namespace Cellstorm.Combat
@@ -8,15 +9,12 @@ namespace Cellstorm.Combat
     /// Contact combat for one swarm. Each swarm handles only the damage IT deals: while touching a hostile
     /// swarm it deals ContactDps (HP per second, applied every physics tick). The receiver applies its own DEF.
     /// Same faction: nothing happens. There is no DEF comparison and no bounce any more; physical collisions stay.
-    ///
-    /// TEMPORARY (V0.1.1 Phase 1): the player's body deals TempPlayerContactDps to anything it touches so the game
-    /// stays playable. Phase 2 replaces it with the Ram dash window and removes this.
+    /// The player's body deals no contact damage: the player hurts enemies with Ram, Jaw, Gun and (V0.2) skills.
+    /// Enemy contact also damages the player's deployed weapon cells (they have no colliders, so it is a cell query).
     /// </summary>
     [RequireComponent(typeof(SwarmStats), typeof(Rigidbody2D))]
     public class SwarmCombat : MonoBehaviour
     {
-        /// <summary>TEMPORARY (removed in Phase 2): HP per second the player's body deals by touching.</summary>
-        public const float TempPlayerContactDps = 30f;
         public const float DefaultEnemyContactDps = 10f;
 
         [SerializeField] Faction faction = Faction.Player;
@@ -26,18 +24,23 @@ namespace Cellstorm.Combat
         public Faction Faction => faction;
         public SwarmStats Stats { get; private set; }
 
+        /// <summary>V0.2: a minion is a player-faction swarm whose death does not end the run.</summary>
+        public bool IsMinion { get; set; }
+
         /// <summary>HP per second this swarm deals to a hostile swarm it touches (before the target's DEF).</summary>
         public float ContactDps { get; set; }
 
         Rigidbody2D _rb;
-        SwarmVisual _visual;
+        CircleCollider2D _col;
+        IHitVisual _visual;
         float _nextDentTime;
 
         void Awake()
         {
             Stats = GetComponent<SwarmStats>();
             _rb = GetComponent<Rigidbody2D>();
-            _visual = GetComponent<SwarmVisual>();
+            _col = GetComponent<CircleCollider2D>();
+            _visual = GetComponent<IHitVisual>();
             ContactDps = DefaultDpsFor(faction);
 
             // OnCollisionStay2D is not called for sleeping bodies, which would stop contact damage
@@ -54,13 +57,21 @@ namespace Cellstorm.Combat
 
         static float DefaultDpsFor(Faction f)
         {
-            return f == Faction.Player ? TempPlayerContactDps : DefaultEnemyContactDps;
+            return f == Faction.Player ? 0f : DefaultEnemyContactDps;
         }
 
         public void SetFaction(Faction f)
         {
             faction = f;
             ContactDps = DefaultDpsFor(f);
+        }
+
+        void FixedUpdate()
+        {
+            if (ContactDps <= 0f || Stats.IsDead) return;
+            if (!WeaponCellGroup.AnyHostileTo(faction)) return;
+            float r = _col != null ? _col.radius : 0.5f;
+            WeaponCellGroup.DamageCircle(transform.position, r, ContactDps * Time.fixedDeltaTime, faction);
         }
 
         void OnCollisionStay2D(Collision2D c)
@@ -91,12 +102,12 @@ namespace Cellstorm.Combat
         {
             if (_visual == null || Time.time < _nextDentTime) return;
             _nextDentTime = Time.time + 0.25f;
-            _visual.Dent(worldPoint, dentStrength);
+            _visual.Hit(worldPoint, dentStrength);
         }
 
         void OnDied()
         {
-            if (faction == Faction.Player)
+            if (faction == Faction.Player && !IsMinion)
             {
                 if (GameManager.Instance != null) GameManager.Instance.SetState(GameState.Dead);
             }

@@ -7,7 +7,7 @@ namespace Cellstorm.UI
     /// <summary>Main menu: play, leaderboard, settings, quit, plus high score and the next unlock.</summary>
     public class MainMenuScreen : MonoBehaviour
     {
-        enum View { Main, Settings, Leaderboard }
+        enum View { Main, Settings, Leaderboard, Achievements }
 
         View _view = View.Main;
         readonly SettingsPanel _settings = new SettingsPanel();
@@ -32,6 +32,14 @@ namespace Cellstorm.UI
                 return;
             }
 
+            if (_view == View.Achievements)
+            {
+                var area = new Rect(sw * 0.5f - 400f, 40f, 800f, sh - 80f);
+                UiDraw.Fill(area, new Color(0.08f, 0.09f, 0.12f, 0.95f));
+                if (AchievementsPanel.Draw(area)) _view = View.Main;
+                return;
+            }
+
             var data = SaveService.Data;
 
             GUI.Label(new Rect(0f, sh * 0.12f, sw, 80f), "CELLSTORM", UiStyles.Title);
@@ -39,11 +47,13 @@ namespace Cellstorm.UI
 
             float w = 300f, h = 54f, gap = 14f;
             float x = (sw - w) * 0.5f;
-            float y = sh * 0.36f;
+            float y = sh * 0.30f;
 
             if (UiDraw.Button(new Rect(x, y, w, h), "Play")) SceneLoader.LoadGame();
             y += h + gap;
             if (UiDraw.Button(new Rect(x, y, w, h), "Leaderboard")) _view = View.Leaderboard;
+            y += h + gap;
+            if (UiDraw.Button(new Rect(x, y, w, h), "Achievements")) _view = View.Achievements;
             y += h + gap;
             if (UiDraw.Button(new Rect(x, y, w, h), "Settings")) _view = View.Settings;
             y += h + gap;
@@ -64,7 +74,7 @@ namespace Cellstorm.UI
 
             var next = UnlockCatalog.NextLocked(data.unlocked);
             string nextText = string.IsNullOrEmpty(next.id)
-                ? "Everything is unlocked!"
+                ? "Every score unlock is done!"
                 : "Next unlock: " + next.name + " at " + next.threshold + " lifetime score";
             GUI.Label(new Rect(0f, y, sw, 26f), nextText, UiStyles.SmallCenter);
         }

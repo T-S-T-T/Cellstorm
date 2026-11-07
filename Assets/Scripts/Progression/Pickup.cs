@@ -9,7 +9,13 @@ namespace Cellstorm.Progression
     {
         Exp,
         Reroll,
-        Shells
+        Shells,
+        /// <summary>V0.2: heals 30% of max HP (resource point reward).</summary>
+        Nutrient,
+        /// <summary>V0.2: Speed +2 for 10 seconds (resource point reward).</summary>
+        Adrenaline,
+        /// <summary>V0.2: small heal dropped while Convert is active.</summary>
+        HpOrb
     }
 
     /// <summary>
@@ -22,6 +28,11 @@ namespace Cellstorm.Progression
         public const float MagnetRange = 3.5f;
         public const float ShellsDefense = 2f;
         public const float ShellsDuration = 10f;
+        public const float AdrenalineSpeed = 2f;
+        public const float AdrenalineDuration = 10f;
+        public const float NutrientFraction = 0.3f;
+        public const float HpOrbLifetime = 10f;
+        public static readonly object AdrenalineSource = new object();
 
         public static readonly List<Pickup> Active = new List<Pickup>();
         public static readonly object ShellsSource = new object();
@@ -37,6 +48,8 @@ namespace Cellstorm.Progression
 
         public PickupType Type { get; private set; }
         public int Value { get; private set; }
+        /// <summary>HP orbs: HP healed when collected.</summary>
+        public float Amount { get; private set; }
 
         float _life = Lifetime;
         float _radius = 0.2f;
@@ -50,6 +63,17 @@ namespace Cellstorm.Progression
             go.transform.position = position;
             var p = go.AddComponent<Pickup>();
             p.Init(type, value);
+            return p;
+        }
+
+        /// <summary>A healing pickup with an exact amount (HP orbs from Convert).</summary>
+        public static Pickup SpawnHeal(PickupType type, Vector2 position, float amount)
+        {
+            var go = new GameObject(type + " Pickup");
+            go.transform.position = position;
+            var p = go.AddComponent<Pickup>();
+            p.Init(type, 1);
+            p.Amount = amount;
             return p;
         }
 
@@ -67,6 +91,19 @@ namespace Cellstorm.Progression
                 case PickupType.Reroll:
                     _color = new Color(0.80f, 0.50f, 1.00f);
                     _radius = 0.28f;
+                    break;
+                case PickupType.Nutrient:
+                    _color = new Color(0.35f, 1.00f, 0.45f);
+                    _radius = 0.32f;
+                    break;
+                case PickupType.Adrenaline:
+                    _color = new Color(1.00f, 0.95f, 0.30f);
+                    _radius = 0.30f;
+                    break;
+                case PickupType.HpOrb:
+                    _color = new Color(1.00f, 0.35f, 0.45f);
+                    _radius = 0.16f;
+                    _life = HpOrbLifetime;
                     break;
                 default:
                     _color = new Color(1.00f, 0.70f, 0.20f);
@@ -148,6 +185,23 @@ namespace Cellstorm.Progression
                 case PickupType.Reroll:
                     if (PlayerProgress.Instance != null) PlayerProgress.Instance.AddRerolls(1);
                     break;
+
+                case PickupType.Nutrient:
+                    _player.Stats.Heal(_player.Stats.MaxHp * NutrientFraction);        // main swarm only
+                    break;
+
+                case PickupType.HpOrb:
+                    _player.Stats.Heal(Amount);
+                    break;
+
+                case PickupType.Adrenaline:
+                {
+                    // A new one refreshes the effect instead of stacking.
+                    var stats = _player.Stats;
+                    stats.RemoveModifiersFrom(AdrenalineSource);
+                    stats.AddModifier(StatType.Speed, ModifierOp.Add, AdrenalineSpeed, AdrenalineDuration, AdrenalineSource);
+                    break;
+                }
 
                 case PickupType.Shells:
                 {

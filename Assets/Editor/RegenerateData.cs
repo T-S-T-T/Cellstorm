@@ -17,15 +17,15 @@ namespace Cellstorm.EditorTools
     /// </summary>
     public static class RegenerateData
     {
-        public const string DataVersion = "0.1.1-phase1";
+        public const string DataVersion = "0.2.0";
         const string Root = "Assets/Data";
         const string VersionFile = "Assets/Data/data_version.txt";
 
-        [MenuItem("Cellstorm/Data/Regenerate data (V0.1.1)")]
+        [MenuItem("Cellstorm/Data/Regenerate data (V0.2)")]
         public static void Run()
         {
             if (!EditorUtility.DisplayDialog("Regenerate Cellstorm data",
-                    "This rebuilds all weapons, enemy types, loadouts and upgrades in Assets/Data from the V0.1.1 defaults.\n\n" +
+                    "This rebuilds all weapons, enemy types, loadouts and upgrades in Assets/Data from the V0.2 defaults.\n\n" +
                     "A backup of Assets/Data is saved to the Backups folder next to Assets first. Continue?",
                     "Regenerate", "Cancel"))
                 return;
@@ -46,14 +46,16 @@ namespace Cellstorm.EditorTools
             var map = new Dictionary<UnityEngine.Object, UnityEngine.Object>();
 
             // ---- Weapons
-            var ram = Upsert(Root + "/Weapons/Ram.asset", WeaponDefaults.Create(WeaponDefaults.RamKey), pairs, map, KeepWeapon);
-            var jaw = Upsert(Root + "/Weapons/Jaw.asset", WeaponDefaults.Create(WeaponDefaults.JawKey), pairs, map, KeepWeapon);
-            var gun = Upsert(Root + "/Weapons/Gun.asset", WeaponDefaults.Create(WeaponDefaults.GunKey), pairs, map, KeepWeapon);
-            var hardening = Upsert(Root + "/Weapons/Hardening.asset", WeaponDefaults.Create(WeaponDefaults.HardeningKey), pairs, map, KeepWeapon);
-            var enemyGun = Upsert(Root + "/Weapons/EnemyGun.asset", WeaponDefaults.Create(WeaponDefaults.EnemyGunKey), pairs, map, KeepWeapon);
+            var weaponAssets = new Dictionary<string, WeaponSO>();
+            foreach (var key in WeaponDefaults.AllKeys)
+                weaponAssets[key] = Upsert(Root + "/Weapons/" + PascalCase(key) + ".asset", WeaponDefaults.Create(key), pairs, map, KeepWeapon);
+            var jaw = weaponAssets[WeaponDefaults.JawKey];
+            var gun = weaponAssets[WeaponDefaults.GunKey];
+            var hardening = weaponAssets[WeaponDefaults.HardeningKey];
+            var enemyGun = weaponAssets[WeaponDefaults.EnemyGunKey];
 
             // ---- Enemy types
-            string[] enemyFiles = { "SingleCell", "MultiCell", "RangedCell", "ExplodingCell" };
+            string[] enemyFiles = { "SingleCell", "MultiCell", "RangedCell", "ExplodingCell", "SupportCell" };
             var freshTypes = EnemyDefaults.CreateTypes();
             var types = new EnemyTypeSO[freshTypes.Length];
             for (int i = 0; i < freshTypes.Length; i++)
@@ -63,8 +65,26 @@ namespace Cellstorm.EditorTools
             }
 
             string tablePath = Root + "/Enemies/SpawnTable.asset";
-            if (AssetDatabase.LoadAssetAtPath<SpawnTableSO>(tablePath) == null)
+            var table = AssetDatabase.LoadAssetAtPath<SpawnTableSO>(tablePath);
+            if (table == null)
+            {
                 AssetDatabase.CreateAsset(EnemyDefaults.CreateTable(types), tablePath);
+            }
+            else
+            {
+                // Keep a tuned table, but make sure it contains every type (V0.2 adds the Support Cell).
+                var fresh = EnemyDefaults.CreateTable(types);
+                var entries = new List<SpawnTableSO.Entry>(table.entries ?? new SpawnTableSO.Entry[0]);
+                foreach (var e in fresh.entries)
+                {
+                    bool has = false;
+                    foreach (var x in entries) if (x != null && x.type == e.type) { has = true; break; }
+                    if (!has) entries.Add(e);
+                }
+                table.entries = entries.ToArray();
+                EditorUtility.SetDirty(table);
+                UnityEngine.Object.DestroyImmediate(fresh);
+            }
 
             // ---- Loadouts
             var freshLoadouts = LoadoutDefaults.CreateAll();
@@ -91,6 +111,7 @@ namespace Cellstorm.EditorTools
                 AssetDatabase.CreateAsset(pool, poolPath);
             }
             pool.upgrades = upgrades;
+            pool.version = UpgradePoolSO.CurrentVersion;
             EditorUtility.SetDirty(pool);
 
             // Destroy the temporary copies that were merged into existing assets.
@@ -115,6 +136,14 @@ namespace Cellstorm.EditorTools
         }
 
         // ---------------- Keep fields that are not defaults ----------------
+
+        static string PascalCase(string key)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var part in key.Split('_'))
+                if (part.Length > 0) sb.Append(char.ToUpperInvariant(part[0])).Append(part.Substring(1));
+            return sb.ToString();
+        }
 
         static void KeepWeapon(WeaponSO existing, WeaponSO fresh) { fresh.icon = existing.icon; }
         static void KeepEnemy(EnemyTypeSO existing, EnemyTypeSO fresh) { fresh.weapon = existing.weapon; }
@@ -171,7 +200,13 @@ namespace Cellstorm.EditorTools
 
         static StatBlockSO[] LoadLoadouts()
         {
-            var names = new[] { "Default", "Speedy", "Tank", "Giant" };
+            var fresh = LoadoutDefaults.CreateAll();
+            var names = new string[fresh.Length];
+            for (int i = 0; i < fresh.Length; i++)
+            {
+                names[i] = fresh[i].name;
+                UnityEngine.Object.DestroyImmediate(fresh[i]);
+            }
             var list = new List<StatBlockSO>();
             foreach (var n in names)
             {
@@ -265,7 +300,7 @@ namespace Cellstorm.EditorTools
 
             SessionState.SetBool(AskedKey, true);
             if (EditorUtility.DisplayDialog("Cellstorm data is out of date",
-                    "The assets in Assets/Data still use the old cell model (version '" + (current == "" ? "V0.1" : current) +
+                    "The assets in Assets/Data are from an older version (version '" + (current == "" ? "V0.1" : current) +
                     "'). Regenerate them now?\n\nA backup is saved first. You can also do this later from Cellstorm > Data.",
                     "Regenerate now", "Later"))
             {

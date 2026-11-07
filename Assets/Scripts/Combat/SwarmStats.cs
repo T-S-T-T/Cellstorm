@@ -32,8 +32,30 @@ namespace Cellstorm.Combat
         /// <summary>Raised when HP is lost (amount actually lost, after DEF).</summary>
         public event Action<float> Damaged;
         public event Action Died;
+        /// <summary>V0.2: raised with the hit and the HP actually lost (Convert uses this to drop HP orbs).</summary>
+        public event Action<DamageInfo, float> DamagedBy;
+
+        StatusController _status;
+        bool _tookNonHazard;
 
         public bool IsDead { get; private set; }
+
+        /// <summary>V0.2: the status effects of this swarm (added on first use if the object does not have one).</summary>
+        public StatusController Status
+        {
+            get
+            {
+                if (_status == null)
+                {
+                    _status = GetComponent<StatusController>();
+                    if (_status == null) _status = gameObject.AddComponent<StatusController>();
+                }
+                return _status;
+            }
+        }
+
+        /// <summary>True when everything that ever hurt this swarm was a hazard (no score and no EXP for that kill).</summary>
+        public bool HazardOnly => !_tookNonHazard;
 
         /// <summary>Test helper (god mode): ignores all damage while true.</summary>
         public bool Invulnerable { get; set; }
@@ -194,7 +216,12 @@ namespace Cellstorm.Combat
             if (IsDead || Invulnerable || info.amount <= 0f) return 0f;
 
             float final = info.type == DamageType.True ? info.amount : DefCurve.Apply(info.amount, Defense);
-            return LoseHp(final);
+            if (!info.hazard) _tookNonHazard = true;
+            float dealt = LoseHp(final, info);
+
+            // Status effects ride on the hit (Toxic Tips, Chilling Touch, Heavy Impact ...). Weapon cells never get them.
+            if (!IsDead && info.status.HasAny) Status.Apply(info.status, info.sourceFaction, info.hazard);
+            return dealt;
         }
 
         /// <summary>Shortcut for a raw hit that DEF reduces (contact, explosions, test damage).</summary>
@@ -207,14 +234,16 @@ namespace Cellstorm.Combat
         public float TakeTrueDamage(float amount)
         {
             if (IsDead || Invulnerable || amount <= 0f) return 0f;
-            return LoseHp(amount);
+            _tookNonHazard = true;
+            return LoseHp(amount, new DamageInfo(amount, DamageType.True, Faction.Enemy, transform.position));
         }
 
-        float LoseHp(float amount)
+        float LoseHp(float amount, DamageInfo info)
         {
             float dealt = Mathf.Min(amount, _hp);
             SetHpInternal(_hp - dealt);
             Damaged?.Invoke(dealt);
+            DamagedBy?.Invoke(info, dealt);
 
             if (_hp <= 0.0001f) Die();
             return dealt;

@@ -54,11 +54,12 @@ namespace Cellstorm.Debugging
         {
             if (!DebugVisibility.Show) return;
             if (body == null) return;
-            int visual = _visual != null ? _visual.ActiveVisualCells : 0;
+            var ab = body.GetComponent<Cellstorm.Weapons.AbilityController>();
+            int cells = ab != null ? ab.LiveWeaponCells() : 0;
             var s = body.Stats;
             GUI.Label(new Rect(10, 35, 1100, 25),
                 $"HP: {s.Hp:F1}/{s.MaxHp:F0}  Radius: {body.Radius:F3} (x{body.SizeMultiplier:F0}, collider {body.ColliderRadius:F3})  " +
-                $"Move speed: {body.MoveSpeed:F1} u/s  (dots: {visual})   FPS: {_fps:F0}");
+                $"Move speed: {body.MoveSpeed:F1} u/s  weapon cells: {cells} (pool total {Cellstorm.Weapons.WeaponCellGroup.TotalCells})   FPS: {_fps:F0}");
             GUI.Label(new Rect(10, 55, 1100, 25),
                 "1-5 = max HP 20/100/500/2000/10000   = / - = double / halve   [ / ] = body size x1 / x2   ` (backtick) = dent");
         }

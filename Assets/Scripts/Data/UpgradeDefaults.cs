@@ -18,57 +18,21 @@ namespace Cellstorm.Data
             }
         }
 
+        /// <summary>The full V0.2 upgrade list. Jaw, Gun and Hardening can be passed as saved assets; the rest use the defaults.</summary>
         public static UpgradeSO[] CreateAll(WeaponSO jaw, WeaponSO gun, WeaponSO hardening)
         {
-            var expand = Make("max_cells", "Expand", "Max HP +20. You heal 20 HP right away.",
-                UpgradeCategory.Swarm, "HP");
-            expand.effect = UpgradeEffect.StatAdd; expand.stat = StatType.MaxHp;
-            expand.amount = 20f; expand.addCurrentCells = true;
+            return CardCatalog.CreateAll(key =>
+            {
+                if (key == WeaponDefaults.JawKey && jaw != null) return jaw;
+                if (key == WeaponDefaults.GunKey && gun != null) return gun;
+                if (key == WeaponDefaults.HardeningKey && hardening != null) return hardening;
+                return WeaponDefaults.ByKey(key);
+            });
+        }
 
-            var regen = Make("regen", "Regeneration", "HP regen +1 per second.",
-                UpgradeCategory.Swarm, "RG");
-            regen.effect = UpgradeEffect.StatAdd; regen.stat = StatType.HpRegen; regen.amount = 1f;
-
-            var def = Make("defense", "Hardened Cells", "DEF +1. You take less damage.",
-                UpgradeCategory.Swarm, "DEF");
-            def.effect = UpgradeEffect.StatAdd; def.stat = StatType.Defense; def.amount = 1f;
-
-            var speed = Make("speed", "Swift Cells", "Speed +1. You move faster, and weapons deploy and recharge faster.",
-                UpgradeCategory.Swarm, "SPD");
-            speed.effect = UpgradeEffect.StatAdd; speed.stat = StatType.Speed; speed.amount = 1f;
-
-            var dense = Make("dense_cells", "Dense Cells",
-                "+20% DEF, -10% max HP. Collect 5 to unlock an evolution.",
-                UpgradeCategory.Swarm, "DNS");
-            dense.effect = UpgradeEffect.StatPercent;
-            dense.stat = StatType.Defense; dense.percent = 0.2f;
-            dense.secondaryStat = StatType.MaxHp; dense.secondaryPercent = -0.1f;
-
-            var jawUp = Make("jaw", "Jaw",
-                "Attack. Hold to form a jaw, release to bite for 150 damage.",
-                UpgradeCategory.Attack, "JAW");
-            jawUp.effect = UpgradeEffect.GrantWeapon; jawUp.weapon = jaw;
-            jawUp.repeatable = false; jawUp.unlockId = "jaw";
-
-            var gunUp = Make("gun", "Gun",
-                "Attack. Hold to form a barrel, release to fire a bullet for 100 damage.",
-                UpgradeCategory.Attack, "GUN");
-            gunUp.effect = UpgradeEffect.GrantWeapon; gunUp.weapon = gun;
-            gunUp.repeatable = false; gunUp.unlockId = "gun";
-
-            var hardenUp = Make("hardening", "Hardening",
-                "Skill. Press to double your DEF for 3 seconds. 10 second cooldown.",
-                UpgradeCategory.Skill, "HRD");
-            hardenUp.effect = UpgradeEffect.GrantWeapon; hardenUp.weapon = hardening;
-            hardenUp.repeatable = false; hardenUp.unlockId = "hardening";
-
-            var tank = Make("evo_tank", "Evolution: Tank",
-                "Evolution. DEF x5. Max HP and regen upgrades are half as effective from now on.",
-                UpgradeCategory.Evolution, "TNK");
-            tank.effect = UpgradeEffect.EvolveTank; tank.repeatable = false;
-            tank.requirementUpgrade = dense; tank.requirementStacks = 5;
-
-            return new[] { expand, regen, def, speed, dense, jawUp, gunUp, hardenUp, tank };
+        public static UpgradeSO[] CreateAll()
+        {
+            return CardCatalog.CreateAll(WeaponDefaults.ByKey);
         }
 
         static UpgradeSO Make(string id, string displayName, string description, UpgradeCategory category, string glyph)

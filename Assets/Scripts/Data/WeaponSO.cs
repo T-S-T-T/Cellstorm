@@ -13,7 +13,15 @@ namespace Cellstorm.Data
         Ram,
         Jaw,
         Gun,
-        Hardening
+        Hardening,
+        // V0.2
+        Whip,
+        SpreadShot,
+        SporeCloud,
+        Mine,
+        Minion,
+        Convert,
+        Shockwave
     }
 
     /// <summary>
@@ -34,7 +42,7 @@ namespace Cellstorm.Data
         [Header("Timing (seconds)")]
         [Tooltip("Time holding the key to form the weapon (improvable). Jaw / Gun only.")]
         [Min(0)] public float shapeTime = 0f;
-        [Tooltip("Ram: 0. Jaw bite: 0.1. Gun: 0. Hardening: effect duration.")]
+        [Tooltip("Ram: dash window 0.3. Jaw bite: 0.1. Gun: 0. Hardening: effect duration.")]
         [Min(0)] public float executeTime = 0f;
         [Min(0)] public float cooldown = 1f;
         [Tooltip("Cooldown applied when the key is released before the shape is complete.")]
@@ -46,7 +54,7 @@ namespace Cellstorm.Data
         [Min(0)] public float damage = 100f;
 
         [Header("Cost")]
-        [Tooltip("Share of MAX HP paid to deploy the weapon (0.1 = 10%). Phase 1: used for the cost of a lost cell only.")]
+        [Tooltip("Share of MAX HP the deployed cells hold (0.1 = 10%). Potent Cells raises it to 0.3. Ram: 0.")]
         [Range(0f, 1f)] public float cellShare = 0f;
 
         [Header("Turning")]
@@ -54,19 +62,16 @@ namespace Cellstorm.Data
         [Range(0f, 1f)] public float turnRateWhileActive = 0.3f;
 
         [Header("Ram")]
-        public float dashSpeed = 12f;
+        [Tooltip("Dash speed as a multiple of the swarm's moving speed. The dash window is executeTime (0.3 s).")]
+        public float dashMultiplier = 5f;
 
         [Header("Jaw")]
         public float coneAngle = 90f;
         [Tooltip("How far the bite reaches beyond the swarm's edge.")]
         public float coneRange = 2f;
-        [Tooltip("OBSOLETE in V0.1.1 (DEF no longer decides hits). Removed in Phase 4.")]
-        public float biteDefMultiplier = 2f;
 
         [Header("Gun")]
         public float bulletSpeedMultiplier = 2f;
-        [Tooltip("OBSOLETE in V0.1.1 (DEF no longer decides hits). Removed in Phase 4.")]
-        public float bulletDefMultiplier = 2f;
         [Tooltip("Improvable. Player bullets never pierce bosses.")]
         [Min(0)] public int pierce = 0;
         public float bulletRadius = 0.2f;
@@ -74,8 +79,44 @@ namespace Cellstorm.Data
         [Header("Skill (Hardening)")]
         public float defMultiplier = 2f;
 
-        [Header("Obsolete")]
-        [Tooltip("OBSOLETE in V0.1.1 (no auto win). Removed in Phase 4.")]
-        public bool autoWin = false;
+        [Header("Whip (V0.2)")]
+        public float whipArc = 120f;
+        [Tooltip("How far the lash reaches beyond the swarm's edge.")]
+        public float whipRange = 3f;
+        [Tooltip("Pull toward the swarm, in units.")]
+        public float pullDistance = 1.5f;
+
+        [Header("Spread Shot (V0.2)")]
+        public int pellets = 5;
+        public float fanAngle = 40f;
+        public float pelletRange = 6f;
+
+        [Header("Spore Cloud (V0.2)")]
+        public float cloudRadius = 2.5f;
+        public float cloudDuration = 4f;
+        [Tooltip("Toxic HP per second applied to everything in the cloud (lasts toxicDuration after leaving).")]
+        public float toxicDps = 5f;
+        public float toxicDuration = 1f;
+
+        [Header("Mine (V0.2)")]
+        public float mineArmTime = 1f;
+        public float mineTriggerRange = 1.2f;
+        public float mineLifetime = 15f;
+        public float blastRadius = 2f;
+
+        [Header("Minion skill (V0.2)")]
+        [Tooltip("Share of the main swarm's max HP each minion costs (0.025 = 2.5%).")]
+        public float minionCostFraction = 0.025f;
+        public float minionContactDps = 10f;
+        public int minionCount = 1;
+
+        [Header("Convert skill (V0.2)")]
+        [Tooltip("Share of the damage dealt that comes back as an HP orb (0.1 = 10%).")]
+        public float orbFraction = 0.1f;
+
+        [Header("Shockwave skill (V0.2)")]
+        public float shockRadius = 5f;
+        public float shockPush = 4f;
+        public float shockStun = 1f;
     }
 }

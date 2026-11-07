@@ -43,10 +43,27 @@ namespace Cellstorm.Data
             exploding.explosionTriggerRange = 0.6f; exploding.explosionRadius = 1.8f; exploding.explosionDamage = 20f;
             exploding.scoreValue = 2; exploding.expValue = 2;
 
-            return new[] { single, multi, ranged, exploding };
+            return new[] { single, multi, ranged, exploding, CreateSupport() };
         }
 
-        /// <param name="types">Same order as CreateTypes: single, multi, ranged, exploding.</param>
+        /// <summary>V0.2 support cell: 80 HP, speed 1.5, heals other enemies within 4 units by 5% per second, stops 8 units from its target.</summary>
+        public static EnemyTypeSO CreateSupport()
+        {
+            var support = ScriptableObject.CreateInstance<EnemyTypeSO>();
+            support.name = "SupportCell";
+            support.displayName = "Support Cell";
+            support.color = new Color(0.35f, 0.90f, 0.45f, 1f);
+            support.maxHp = 80f; support.defense = 1f; support.speed = 1.5f; support.contactDps = 5f;
+            support.behavior = EnemyBehavior.Support;
+            support.supportStandOff = 8f; support.healRange = 4f; support.healFraction = 0.05f;
+            support.scoreValue = 20; support.expValue = 5;
+            return support;
+        }
+
+        /// <summary>Spawn rates of the support cell per milestone 0..6 (GDD V0.2 section 7.3).</summary>
+        public static readonly float[] SupportRates = { 0f, 0f, 0.05f, 0.1f, 0.1f, 0.15f, 0.3f };
+
+        /// <param name="types">Same order as CreateTypes: single, multi, ranged, exploding, support.</param>
         public static SpawnTableSO CreateTable(EnemyTypeSO[] types)
         {
             var table = ScriptableObject.CreateInstance<SpawnTableSO>();
@@ -57,6 +74,7 @@ namespace Cellstorm.Data
                 new SpawnTableSO.Entry { type = types[1], ratesPerSecond = new[] { 0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 2f } },
                 new SpawnTableSO.Entry { type = types[2], ratesPerSecond = new[] { 0f, 0f, 0f, 0.1f, 0.2f, 0.2f, 1f } },
                 new SpawnTableSO.Entry { type = types[3], ratesPerSecond = new[] { 0f, 0f, 0f, 0f, 0f, 0.1f, 1f } },
+                new SpawnTableSO.Entry { type = types[4], ratesPerSecond = SupportRates },
             };
             return table;
         }

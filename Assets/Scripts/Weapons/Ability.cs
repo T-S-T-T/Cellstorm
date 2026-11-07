@@ -1,3 +1,4 @@
+using Cellstorm.Combat;
 using Cellstorm.Data;
 using UnityEngine;
 
@@ -36,6 +37,30 @@ namespace Cellstorm.Weapons
             Owner = owner;
             Data = data;
         }
+
+        /// <summary>A parameter after the owner's cards: (base + adds) x multipliers.</summary>
+        protected float P(Param p, float baseValue)
+        {
+            return Owner.Mods.Get(p, Data, baseValue);
+        }
+
+        /// <summary>Damage of one hit: base + cards, times the owner's damage multiplier (bosses).</summary>
+        protected float DamageNow => Mathf.Max(0f, P(Param.Damage, Data.damage)) * Owner.DamageMultiplier;
+
+        /// <summary>The cooldown after cards (Quick Ram, Quick Hands, Artillery ...).</summary>
+        protected float CooldownBase => Mathf.Max(0.05f, P(Param.Cooldown, Data.cooldown));
+
+        /// <summary>Status payload of a hit: the weapon's own base effect plus every card that adds one.</summary>
+        protected StatusPayload StatusFor(StatusPayload baseEffect, Vector2 source)
+        {
+            return Owner.Mods.Status(Data, baseEffect, source);
+        }
+
+        /// <summary>The swarm was stunned: cell weapons release without firing.</summary>
+        public virtual void OnStunned() { }
+
+        /// <summary>True while this ability has deployed weapon cells holding HP (Jaw / Gun). Only one at a time.</summary>
+        public virtual bool HoldsHp => false;
 
         /// <summary>Multiplier for the owner's turn rate while this ability is active.</summary>
         public virtual float TurnPenalty => 1f;

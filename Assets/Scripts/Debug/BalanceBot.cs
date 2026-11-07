@@ -17,7 +17,8 @@ namespace Cellstorm.Debugging
     /// F5 starts an automatic balance test: a simple bot plays several full runs at high speed and appends one CSV
     /// line per run to balance_log.csv in the persistent data folder. It never touches your save file (runs are not
     /// recorded) and treats everything as unlocked. F5 again stops it.
-    /// The bot hunts enemies it can beat, avoids ones that out-DEF it, collects pickups, uses Ram / Jaw / Gun /
+    /// The bot hunts enemies it can beat, avoids ones whose expected damage (contact damage x the time it takes to
+    /// kill them, after DEF) is too high for its current HP, collects pickups, uses Ram / Jaw / Gun /
     /// Hardening in a basic way and picks upgrades with one of three policies. It is a rough measuring stick,
     /// not a good player: use it to compare numbers between tuning changes.
     /// </summary>
@@ -37,8 +38,8 @@ namespace Cellstorm.Debugging
         static readonly string[] LoadoutNames = { "Default", "Speedy", "Tank" };
         static readonly string[][] Priorities =
         {
-            new[] { "evo_tank", "defense", "dense_cells", "max_cells", "regen", "speed", "gun", "jaw", "hardening" },
-            new[] { "max_cells", "defense", "regen", "speed", "gun", "jaw", "hardening", "dense_cells", "evo_tank" },
+            new[] { "evo_tank", "defense", "dense_cells", "max_cells", "regen", "speed", "gun", "jaw", "potent_cells", "hardening" },
+            new[] { "max_cells", "defense", "regen", "speed", "gun", "jaw", "potent_cells", "hardening", "dense_cells", "evo_tank" },
             null
         };
 
@@ -183,9 +184,24 @@ namespace Cellstorm.Debugging
             }
             if (best == null) best = pp.Options[0];
 
+            // Weapons and skills always need a slot: the first free one, otherwise the second slot of that kind.
             int slot = -1;
-            if (build.NeedsReplaceTarget(best)) slot = PlayerBuild.SlotsFor(best)[1];
-            if (!pp.Choose(best, slot)) pp.Choose(pp.Options[0], -1);
+            if (best.effect == UpgradeEffect.GrantWeapon)
+            {
+                slot = build.FindFreeSlot(best);
+                if (slot < 0) slot = PlayerBuild.SlotsFor(best)[1];
+            }
+            if (!pp.Choose(best, slot))
+            {
+                var fallback = pp.Options[0];
+                int fs = -1;
+                if (fallback.effect == UpgradeEffect.GrantWeapon)
+                {
+                    fs = build.FindFreeSlot(fallback);
+                    if (fs < 0) fs = PlayerBuild.SlotsFor(fallback)[0];
+                }
+                pp.Choose(fallback, fs);
+            }
         }
 
         int RankOf(UpgradeSO u)
@@ -199,13 +215,38 @@ namespace Cellstorm.Debugging
 
         // ---------------- Playing ----------------
 
-        static bool Threatens(Enemy e, float myDef)
+        /// <summary>Rough damage per second the bot can deal to an enemy with its equipped weapons.</summary>
+        float MyDpsAgainst(Enemy e)
         {
-            float d = e.Stats.Defense;
-            if (d > myDef) return true;
-            if (e.Spec.behavior == EnemyBehavior.Explode) return true;
-            var w = e.Spec.weapon;
-            return w != null && (w.type == WeaponType.Gun || w.type == WeaponType.Jaw) && d * 2f > myDef;
+            float dps = 0f;
+            if (_abilities == null) return 10f;
+            float speed = _body.Stats.Speed;
+            for (int i = 0; i < AbilityController.SlotCount; i++)
+            {
+                var a = _abilities.GetSlot(i);
+                if (a == null || a.Data.kind != AbilityKind.Weapon) continue;
+                float cycle = a.Data.type == WeaponType.Ram
+                    ? a.Data.cooldown + 0.3f
+                    : SpeedMath.Scaled(a.Data.shapeTime, speed) + SpeedMath.Scaled(a.Data.cooldown, speed) + 0.3f;
+                dps += DefCurve.Apply(a.Data.damage * _abilities.DamageMultiplier, e.Stats.Defense) / Mathf.Max(0.2f, cycle);
+            }
+            return Mathf.Max(1f, dps);
+        }
+
+        /// <summary>
+        /// Threat = the damage this enemy is expected to deal before it dies (its contact damage after my DEF, times
+        /// the seconds I need to kill it) compared to my HP. Ranged enemies and exploders are always dangerous when I am weak.
+        /// </summary>
+        bool Threatens(Enemy e)
+        {
+            var s = _body.Stats;
+            float contact = e.Spec.contactDps * e.Spec.damageMultiplier * (1f - DefCurve.Reduction(s.Defense));
+            float timeToKill = e.Stats.Hp / MyDpsAgainst(e);
+            float expected = contact * timeToKill;
+            if (e.Spec.behavior == EnemyBehavior.Explode)
+                expected += DefCurve.Apply(e.Spec.explosionDamage * e.Spec.damageMultiplier, s.Defense);
+            if (e.IsBoss) expected *= 1.5f;
+            return expected > s.Hp * 0.5f;
         }
 
         void Drive()
@@ -220,8 +261,6 @@ namespace Cellstorm.Debugging
             }
 
             Vector2 p = _body.transform.position;
-            float myDef = _body.Stats.Defense;
-
             Vector2 flee = Vector2.zero;
             Enemy target = null;
             float targetDist = float.MaxValue;
@@ -236,7 +275,7 @@ namespace Cellstorm.Debugging
 
                 Vector2 d = (Vector2)e.transform.position - p;
                 float dist = d.magnitude;
-                if (Threatens(e, myDef))
+                if (Threatens(e))
                 {
                     nearestThreat = Mathf.Min(nearestThreat, dist);
                     if (dist < 9f && dist > 0.001f) flee -= d / (dist * dist);

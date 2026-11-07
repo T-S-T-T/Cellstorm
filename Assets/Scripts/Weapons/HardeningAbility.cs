@@ -9,6 +9,7 @@ namespace Cellstorm.Weapons
     {
         StatModifier _mod;
         float _timer;
+        float _duration = 3f;
 
         public HardeningAbility(AbilityController owner, WeaponSO data) : base(owner, data) { }
 
@@ -16,7 +17,7 @@ namespace Cellstorm.Weapons
         {
             get
             {
-                if (Phase == AbilityPhase.Executing) return 1f - Mathf.Clamp01(_timer / Mathf.Max(0.01f, Data.executeTime));
+                if (Phase == AbilityPhase.Executing) return 1f - Mathf.Clamp01(_timer / Mathf.Max(0.01f, _duration));
                 if (Phase == AbilityPhase.Cooldown) return CooldownProgress;
                 return 0f;
             }
@@ -29,8 +30,9 @@ namespace Cellstorm.Weapons
                 case AbilityPhase.Ready:
                     if (input.pressed)
                     {
-                        _mod = Owner.Stats.AddModifier(StatType.Defense, ModifierOp.Multiply, Data.defMultiplier, -1f, this);
-                        _timer = Data.executeTime;
+                        _duration = Mathf.Max(0.1f, P(Param.EffectDuration, Data.executeTime));
+                        _mod = Owner.Stats.AddModifier(StatType.Defense, ModifierOp.Multiply, P(Param.DefMultiplier, Data.defMultiplier), -1f, this);
+                        _timer = _duration;
                         Phase = AbilityPhase.Executing;
                     }
                     break;
@@ -40,7 +42,7 @@ namespace Cellstorm.Weapons
                     if (_timer <= 0f)
                     {
                         RemoveMod();
-                        StartCooldown(Data.cooldown);
+                        StartCooldown(CooldownBase);
                     }
                     break;
 

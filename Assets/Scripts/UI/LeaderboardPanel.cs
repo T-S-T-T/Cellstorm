@@ -22,7 +22,7 @@ namespace Cellstorm.UI
             GUI.Label(new Rect(area.x + 10f, area.y + 50f, area.width - 20f, 28f), stats, UiStyles.Small);
 
             float y = area.y + 86f;
-            DrawRow(area.x + 10f, y, area.width - 20f, "#", "Score", "Time", "Result", "Loadout", "Max HP", "DEF", "Spd", "Weapons", true);
+            DrawRow(area.x + 10f, y, area.width - 20f, "#", "Score", "Time", "Result", "Loadout", "Max HP", "Speed", "Regen", "Weapons", true);
             y += 30f;
 
             var listRect = new Rect(area.x + 10f, y, area.width - 20f, area.yMax - y - 60f);
@@ -33,7 +33,7 @@ namespace Cellstorm.UI
                 var r = data.leaderboard[i];
                 string result = r.won ? (r.endless ? "Won + endless" : "Won") : "Defeated";
                 DrawRow(0f, i * 28f, listRect.width - 20f, (i + 1).ToString(), r.score.ToString(), UiDraw.Time(r.runTime),
-                    result, r.loadout, (r.maxHp > 0f ? Mathf.RoundToInt(r.maxHp).ToString() : "-"), r.defense.ToString("0.#"), r.speed.ToString("0.#"), r.weapons, false);
+                    result, r.loadout, (r.maxHp > 0f ? Mathf.RoundToInt(r.maxHp).ToString() : "-"), r.speed.ToString("0.#"), r.regen.ToString("0.#") + "/s", r.weapons, false);
             }
             if (n == 0) GUI.Label(new Rect(0f, 0f, listRect.width, 28f), "No runs yet. Go play!", UiStyles.Label);
             GUI.EndScrollView();
@@ -42,11 +42,11 @@ namespace Cellstorm.UI
         }
 
         static void DrawRow(float x, float y, float w, string rank, string score, string time, string result,
-            string loadout, string cells, string def, string spd, string weapons, bool header)
+            string loadout, string maxHp, string spd, string regen, string weapons, bool header)
         {
             var style = header ? UiStyles.Small : UiStyles.Label;
             float[] cx = { 0f, 40f, 130f, 210f, 330f, 430f, 510f, 580f, 650f };
-            string[] text = { rank, score, time, result, loadout, cells, def, spd, weapons };
+            string[] text = { rank, score, time, result, loadout, maxHp, spd, regen, weapons };
             float[] cw = { 36f, 86f, 76f, 116f, 96f, 76f, 66f, 66f, Mathf.Max(100f, w - 650f) };
             for (int i = 0; i < text.Length; i++)
                 GUI.Label(new Rect(x + cx[i], y, cw[i], 28f), text[i], style);

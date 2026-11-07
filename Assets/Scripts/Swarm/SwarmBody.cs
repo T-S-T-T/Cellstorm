@@ -11,7 +11,7 @@ namespace Cellstorm.Swarm
     /// knockback, and a turn-rate limited aim direction. HP, DEF and speed come from SwarmStats.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D), typeof(SwarmStats))]
-    public class SwarmBody : MonoBehaviour, IAbilityHost
+    public class SwarmBody : MonoBehaviour, IAbilityHost, ITargetable
     {
         [Header("Movement (units per second = Speed x 1, see SpeedMath)")]
         [Tooltip("How quickly the swarm speeds up (units/s^2).")]
@@ -33,9 +33,15 @@ namespace Cellstorm.Swarm
         Vector2 _moveVelocity;
         Vector2 _knockback;
         float _aimAngle = 90f;
+        Vector2 _dashVelocity;
+        float _dashTimer;
+
+        ShoveState _shove;
+        StatusController _status;
 
         public SwarmStats Stats => _stats;
         public bool IsDead => _stats.IsDead;
+        public Vector2 Position => transform.position;
         /// <summary>Loadout size multiplier (Giant = 2).</summary>
         public float SizeMultiplier => _sizeMultiplier;
         /// <summary>Visual radius. Fixed: never reads HP. 0.335 x the size multiplier.</summary>
@@ -44,11 +50,6 @@ namespace Cellstorm.Swarm
         public float SmoothedRadius => Radius;
         /// <summary>Collider radius: the visual radius x 1.1.</summary>
         public float ColliderRadius => SwarmSize.Collider(Radius);
-        /// <summary>
-        /// TEMPORARY until the soft ball visual (Phase 3): how many dots the old dot visual draws, derived from the
-        /// radius so a normal player looks like V0.1 with 5 cells.
-        /// </summary>
-        public int LegacyDotCount => Mathf.Max(1, Mathf.RoundToInt((Radius / 0.15f) * (Radius / 0.15f)));
         public float MoveSpeed => SpeedMath.MoveSpeed(_stats.Speed);
 
         /// <summary>Weapons set this below 1 while shaping/executing (reduced turning rate).</summary>
@@ -67,6 +68,7 @@ namespace Cellstorm.Swarm
             _col = GetComponent<CircleCollider2D>();
             _stats = GetComponent<SwarmStats>();
             if (_stats == null) _stats = gameObject.AddComponent<SwarmStats>();
+            _status = _stats.Status;
 
             _rb.gravityScale = 0f;
             _rb.freezeRotation = true;
@@ -88,9 +90,41 @@ namespace Cellstorm.Swarm
             _stats.DebugSetMaxAndHp(value);
         }
 
+        void OnEnable()
+        {
+            TargetingService.Register(this);
+        }
+
+        void OnDisable()
+        {
+            TargetingService.Unregister(this);
+        }
+
+        /// <summary>Knockback or pull from a status effect: a short, springy shove (about 0.2 s). DEF does not reduce it.</summary>
+        public void Shove(Vector2 displacement, float duration)
+        {
+            _shove.Set(displacement, duration);
+        }
+
         public void AddKnockback(Vector2 velocity)
         {
             _knockback = Vector2.ClampMagnitude(_knockback + velocity, maxKnockbackSpeed);
+        }
+
+        public bool IsDashing => _dashTimer > 0f;
+
+        /// <summary>Ram: straight dash that replaces normal movement until the window ends.</summary>
+        public void BeginDash(Vector2 direction, float speed, float duration)
+        {
+            _dashVelocity = direction.normalized * speed;
+            _dashTimer = duration;
+        }
+
+        public void EndDash()
+        {
+            if (_dashTimer <= 0f) return;
+            _dashTimer = 0f;
+            _moveVelocity = Vector2.ClampMagnitude(_dashVelocity, MoveSpeed);   // keep a little momentum
         }
 
         void Update()
@@ -122,14 +156,28 @@ namespace Cellstorm.Swarm
 
         void FixedUpdate()
         {
+            if (_dashTimer > 0f)
+            {
+                _dashTimer -= Time.fixedDeltaTime;
+                _rb.linearVelocity = _dashVelocity + _shove.Step(Time.fixedDeltaTime);
+                if (_dashTimer <= 0f) EndDashInternal();
+                return;
+            }
+
             Vector2 input = Vector2.zero;
-            if (CanAct()) input = BotMove.HasValue ? BotMove.Value : InputService.Move.ReadValue<Vector2>();
-            Vector2 targetVelocity = input * MoveSpeed;
+            if (CanAct() && !_status.Stunned) input = BotMove.HasValue ? BotMove.Value : InputService.Move.ReadValue<Vector2>();
+            Vector2 targetVelocity = input * (MoveSpeed * _status.SpeedFactor);       // Slow lowers moving speed only
             float rate = input.sqrMagnitude > 0.01f ? acceleration : deceleration;
 
             _moveVelocity = Vector2.MoveTowards(_moveVelocity, targetVelocity, rate * Time.fixedDeltaTime);
             _knockback = Vector2.MoveTowards(_knockback, Vector2.zero, knockbackDecay * Time.fixedDeltaTime);
-            _rb.linearVelocity = _moveVelocity + _knockback;
+            _rb.linearVelocity = _moveVelocity + _knockback + _shove.Step(Time.fixedDeltaTime) + _status.External;
+        }
+
+        void EndDashInternal()
+        {
+            _dashTimer = 0f;
+            _moveVelocity = Vector2.ClampMagnitude(_dashVelocity, MoveSpeed);
         }
 
         bool CanAct()

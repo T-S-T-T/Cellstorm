@@ -8,7 +8,7 @@ namespace Cellstorm.Debugging
 {
     /// <summary>
     /// TEMPORARY test harness: spawns debug enemies, tweaks player stats, and shows the numbers.
-    /// Z single (10 HP)   X multi (100 HP)   C brute (500 HP, DEF 3)   V mirror (100 HP, DEF equal to yours)
+    /// Z single (10 HP)   X multi (100 HP)   N real ranged   M real exploder   C brute (500 HP, DEF 3)   V mirror (100 HP, DEF equal to yours)
     /// B toggle chase  K clear enemies   H heal   , and . base DEF -1/+1   T "hardening" x2 DEF for 3s
     /// U take a 20 damage test hit (shows what your DEF does)   R restart the scene
     /// </summary>
@@ -58,6 +58,8 @@ namespace Cellstorm.Debugging
 
             if (kb.zKey.wasPressedThisFrame) Spawn("Single", 10f, 1f, 1f, new Color(0.95f, 0.35f, 0.35f));
             if (kb.xKey.wasPressedThisFrame) Spawn("Multi", 100f, 1f, 1f, new Color(0.95f, 0.60f, 0.30f));
+            if (kb.nKey.wasPressedThisFrame) SpawnReal(2);   // real Ranged Cell with its gun
+            if (kb.mKey.wasPressedThisFrame) SpawnReal(3);   // real Exploding Cell
             if (kb.cKey.wasPressedThisFrame) Spawn("Brute", 500f, 3f, 1f, new Color(0.70f, 0.20f, 0.80f));
             if (kb.vKey.wasPressedThisFrame) Spawn("Mirror", 100f, stats.Defense, 1f, new Color(0.35f, 0.60f, 0.95f));
             if (kb.uKey.wasPressedThisFrame) stats.TakeDamage(20f, DamageType.Contact);
@@ -83,6 +85,15 @@ namespace Cellstorm.Debugging
                 _nextScan = Time.unscaledTime + 0.25f;
                 FindNearestEnemy();
             }
+        }
+
+        void SpawnReal(int typeIndex)
+        {
+            var types = Cellstorm.Data.EnemyDefaults.CreateTypes();
+            var spec = Cellstorm.Enemies.EnemySpec.FromType(types[typeIndex], 1);
+            Vector2 dir = Random.insideUnitCircle.normalized;
+            if (dir.sqrMagnitude < 0.01f) dir = Vector2.right;
+            Cellstorm.Enemies.Enemy.Create(spec, (Vector2)player.transform.position + dir * 8f);
         }
 
         void Spawn(string label, float hp, float def, float speed, Color color)
@@ -139,10 +150,10 @@ namespace Cellstorm.Debugging
             string line2 = "Nearest enemy: none";
             if (_nearest != null)
             {
-                float pToE = DefCurve.Apply(SwarmCombat.TempPlayerContactDps, _nearest.Defense);
                 float eToP = DefCurve.Apply(SwarmCombat.DefaultEnemyContactDps, s.Defense);
+                float ram = DefCurve.Apply(30f, _nearest.Defense);
                 line2 = $"Nearest: {_nearestName}  HP {_nearest.Hp:F0}/{_nearest.MaxHp:F0}  DEF {_nearest.Defense:F1}   " +
-                        $"you -> it {pToE:F1} HP/s   it -> you {eToP:F1} HP/s   (temporary contact numbers)";
+                        $"your Ram hit {ram:F1}   its contact -> you {eToP:F1} HP/s";
             }
 
             float ago = Time.time - _lastDamageTime;
@@ -152,7 +163,7 @@ namespace Cellstorm.Debugging
             GUI.Label(new Rect(10, 105, 1100, 25), line2);
             GUI.Label(new Rect(10, 125, 1100, 25), line3);
             GUI.Label(new Rect(10, 145, 1100, 25),
-                "Z single  X multi  C brute(DEF3)  V mirror(same DEF)  B chase on/off  K clear  H heal  , . DEF -/+  T DEF x2 for 3s  U 20 dmg test hit  R restart");
+                "Z single  X multi  N ranged(real)  M exploder(real)  C brute(DEF3)  V mirror(same DEF)  B chase on/off  K clear  H heal  , . DEF -/+  T DEF x2 for 3s  U 20 dmg test hit  R restart");
 
             if (s.IsDead)
             {

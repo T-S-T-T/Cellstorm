@@ -1,6 +1,7 @@
 using Cellstorm.Combat;
 using Cellstorm.Core;
 using Cellstorm.Data;
+using Cellstorm.Progression;
 using Cellstorm.Swarm;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -47,6 +48,9 @@ namespace Cellstorm.Weapons
 
         public SwarmStats Stats => _stats;
 
+        /// <summary>V0.2: the cards and evolutions this swarm owns. Empty for enemies.</summary>
+        public UpgradeMods Mods { get; } = new UpgradeMods();
+
         /// <summary>Multiplies the damage of every weapon this swarm uses (bosses: 1 + 0.2 x (milestone - 1)).</summary>
         public float DamageMultiplier { get; set; } = 1f;
 
@@ -63,7 +67,42 @@ namespace Cellstorm.Weapons
         public Faction Faction => _combat != null ? _combat.Faction : (_isPlayer ? Faction.Player : Faction.Enemy);
         public Vector2 Position => transform.position;
         public float Radius => _col != null ? _col.radius : 0.5f;
-        public float WeaponCellRadius => Mathf.Clamp(Radius * 0.25f, 0.12f, 0.45f);
+        /// <summary>Radius of one weapon cell. 100 to 200 small cells make a thick shape.</summary>
+        public float WeaponCellRadius => Mathf.Clamp(Radius * 0.22f, 0.06f, 0.4f);
+
+        /// <summary>How many cells a deployed weapon uses: 100 by default, 200 for the Giant, 100 for enemies.</summary>
+        public int WeaponCellCount => _isPlayer ? RunSetup.WeaponCellCount : 100;
+
+        /// <summary>Share of max HP the weapon's cells hold when deployed (10% by default, 30% with Potent Cells).</summary>
+        public float HpCostFraction(WeaponSO data)
+        {
+            if (data.cellShare <= 0f) return 0f;
+            return Mathf.Clamp01(Mods.Get(Param.CostFraction, data, data.cellShare));
+        }
+
+        /// <summary>Only one HP-cost weapon (Jaw or Gun) can be deployed at a time. Ram and skills do not count.</summary>
+        public bool CanDeploy(Ability who)
+        {
+            for (int i = 0; i < SlotCount; i++)
+                if (_slots[i] != null && _slots[i] != who && _slots[i].HoldsHp) return false;
+            return true;
+        }
+
+        /// <summary>A new weapon starts: cells still flying back from an earlier one vanish, so cells never pile up.</summary>
+        public void PurgeReturningCells()
+        {
+            for (int i = 0; i < SlotCount; i++)
+                if (_slots[i] is ShapedAbility sa) sa.PurgeReturning();
+        }
+
+        /// <summary>Deployed or returning weapon cells of this swarm (self tests, perf monitor).</summary>
+        public int LiveWeaponCells()
+        {
+            int n = 0;
+            for (int i = 0; i < SlotCount; i++)
+                if (_slots[i] is ShapedAbility sa) n += sa.CellCount;
+            return n;
+        }
 
         public CellStyle CellStyle
         {
@@ -184,6 +223,13 @@ namespace Cellstorm.Weapons
             if (x != null && (x.Phase == AbilityPhase.Shaping || x.Phase == AbilityPhase.Primed)) x.Cancel();
         }
 
+        /// <summary>A stun releases a deployed cell weapon (its cells return).</summary>
+        public void OnStunned()
+        {
+            for (int i = 0; i < SlotCount; i++)
+                if (_slots[i] != null) _slots[i].OnStunned();
+        }
+
         public void CancelAll()
         {
             for (int i = 0; i < SlotCount; i++)
@@ -204,12 +250,14 @@ namespace Cellstorm.Weapons
             if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
             if (_stats.IsDead) return;
 
+            bool stunned = _stats.Status.Stunned;
             float turn = 1f;
             for (int i = 0; i < SlotCount; i++)
             {
                 var ability = _slots[i];
                 var input = ReadInput(i);
                 if (ability == null) continue;
+                if (stunned) input = default;     // a stunned swarm cannot deploy, fire or use skills
 
                 ability.Tick(dt, input);
                 turn = Mathf.Min(turn, ability.TurnPenalty);

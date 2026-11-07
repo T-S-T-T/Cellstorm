@@ -2,6 +2,7 @@ using Cellstorm.Core;
 using Cellstorm.Data;
 using Cellstorm.Meta;
 using Cellstorm.Swarm;
+using Cellstorm.Weapons;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -55,7 +56,7 @@ namespace Cellstorm.Progression
         void Start()
         {
             _player = FindAnyObjectByType<SwarmBody>();
-            _active = loadouts != null && loadouts.Length > 0 ? loadouts : LoadoutDefaults.CreateAll();
+            _active = MergeWithDefaults(loadouts);
             if (_player == null) return;
 
             if (skipPicker)
@@ -66,12 +67,45 @@ namespace Cellstorm.Progression
             if (GameManager.Instance != null) GameManager.Instance.SetState(GameState.LoadoutSelect);
         }
 
+        /// <summary>Scene assets from before V0.2 lack Swarmer and Sporer: add the built-in ones until the data is regenerated.</summary>
+        static StatBlockSO[] MergeWithDefaults(StatBlockSO[] fromScene)
+        {
+            var list = new System.Collections.Generic.List<StatBlockSO>();
+            if (fromScene != null)
+                foreach (var b in fromScene)
+                    if (b != null) list.Add(b);
+
+            foreach (var d in LoadoutDefaults.CreateAll())
+            {
+                bool have = false;
+                foreach (var b in list)
+                    if (b.name == d.name) { have = true; break; }
+                if (!have) list.Add(d);
+            }
+            // Order: Default first, then the defaults' order (Default, Speedy, Tank, Giant, Swarmer, Sporer).
+            var order = new System.Collections.Generic.List<string>();
+            foreach (var d in LoadoutDefaults.CreateAll()) order.Add(d.name);
+            list.Sort((a, b) => order.IndexOf(a.name).CompareTo(order.IndexOf(b.name)));
+            return list.ToArray();
+        }
+
         void Apply(StatBlockSO block)
         {
             SelectedLoadout = block.name;
             WeaponCellCount = block.weaponCellCount;
             _player.Stats.Configure(block.maxHp, block.hpRegen, block.defense, block.speed);
             _player.SetSizeMultiplier(block.sizeMultiplier);
+
+            // A loadout can change the starting weapon or skill (Swarmer: Minion on Q, Sporer: Spore Cloud on LMB).
+            // These work for the run even if the item itself is not unlocked yet.
+            var abilities = _player.GetComponent<AbilityController>();
+            if (abilities != null)
+            {
+                var weapon = WeaponDefaults.ByKey(block.startWeaponKey);
+                var skill = WeaponDefaults.ByKey(block.startSkillKey);
+                if (weapon != null) abilities.Equip(0, weapon);
+                if (skill != null) abilities.Equip(2, skill);
+            }
         }
 
         static string UnlockIdFor(StatBlockSO b)
@@ -100,7 +134,7 @@ namespace Cellstorm.Progression
             float sw = Screen.width, sh = Screen.height;
             GUI.Label(new Rect(0, sh * 0.12f, sw, 50), "Choose your starting swarm", _title);
 
-            float cardW = 230f, cardH = 210f, gap = 30f;
+            float cardW = 200f, cardH = 230f, gap = 16f;
             float total = _active.Length * cardW + (_active.Length - 1) * gap;
             float x0 = (sw - total) * 0.5f;
             float y = sh * 0.30f;
@@ -122,9 +156,11 @@ namespace Cellstorm.Progression
                 GUI.Label(new Rect(rect.x, rect.y + 12, rect.width, 36), b.name, _name);
                 string stats = "HP " + b.maxHp + "   Regen " + b.hpRegen + "/s\nDEF " + b.defense + "   Speed " + b.speed;
                 if (!Mathf.Approximately(b.sizeMultiplier, 1f)) stats += "\nBody x" + b.sizeMultiplier + "   Weapon cells " + b.weaponCellCount;
+                if (!string.IsNullOrEmpty(b.startWeaponKey)) stats += "\nStarts with " + WeaponDefaults.ByKey(b.startWeaponKey).displayName;
+                if (!string.IsNullOrEmpty(b.startSkillKey)) stats += "\nStarts with " + WeaponDefaults.ByKey(b.startSkillKey).displayName + " (skill)";
                 string text = unlocked
                     ? stats
-                    : "Locked\nUnlocks at " + UnlockCatalog.ThresholdFor(unlockId) + " lifetime score\n(you have " + lifetime + ")";
+                    : "Locked\n" + UnlockCatalog.RequirementFor(unlockId) + "\n(you have " + lifetime + " lifetime score)";
                 GUI.Label(new Rect(rect.x + 8, rect.y + 60, rect.width - 16, 100), text, _small);
 
                 if (unlocked && GUI.Button(rect, GUIContent.none, GUIStyle.none))
@@ -134,7 +170,7 @@ namespace Cellstorm.Progression
                 }
             }
 
-            GUI.Label(new Rect(0, y + cardH + 20, sw, 30), "Every run starts with the Ram attack.", _small);
+            GUI.Label(new Rect(0, y + cardH + 20, sw, 30), "Every run starts with the Ram attack unless the loadout says otherwise.", _small);
         }
     }
 }

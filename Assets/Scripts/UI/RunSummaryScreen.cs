@@ -56,9 +56,9 @@ namespace Cellstorm.UI
             Line(x, ref y, panelW, "Milestone reached", r.milestone + (r.endless ? " (endless)" : ""));
             Line(x, ref y, panelW, "Loadout", r.loadout);
             Line(x, ref y, panelW, "Enemies defeated", r.enemiesDefeated + "   (bosses " + r.bossesDefeated + ")");
-            Line(x, ref y, panelW, "Final swarm", MaxHpText(r) + " max HP   DEF " + r.defense.ToString("0.#") +
-                                                  "   speed " + r.speed.ToString("0.#") + "   regen " + r.regen.ToString("0.#") + "/s");
+            Line(x, ref y, panelW, "Final swarm", MaxHpText(r) + " max HP   speed " + r.speed.ToString("0.#") + "   regen " + r.regen.ToString("0.#") + "/s");
             Line(x, ref y, panelW, "Weapons and skills", string.IsNullOrEmpty(r.weapons) ? "-" : r.weapons);
+            Line(x, ref y, panelW, "Evolutions", string.IsNullOrEmpty(r.evolutions) ? "-" : r.evolutions);
 
             if (summary.unlockedNames.Count > 0)
             {

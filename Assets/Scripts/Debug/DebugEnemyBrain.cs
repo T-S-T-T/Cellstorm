@@ -30,6 +30,11 @@ namespace Cellstorm.Debugging
             _rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         }
 
+        public void Shove(Vector2 displacement, float duration)
+        {
+            _knockback = Vector2.ClampMagnitude(_knockback + displacement / Mathf.Max(0.05f, duration) * 0.25f, maxKnockbackSpeed);
+        }
+
         public void AddKnockback(Vector2 velocity)
         {
             _knockback = Vector2.ClampMagnitude(_knockback + velocity, maxKnockbackSpeed);

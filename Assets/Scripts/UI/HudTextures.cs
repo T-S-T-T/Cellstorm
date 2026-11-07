@@ -126,37 +126,34 @@ namespace Cellstorm.UI
     /// <summary>Screen positions of the HUD elements (shared by the HUD and swap mode).</summary>
     public static class HudLayout
     {
-        public const float HeartSize = 112f;
+        public const float BarWidth = 380f;
+        public const float BarHeight = 34f;
         public const float SlotSize = 60f;
         public const float Gap = 10f;
         public const float Margin = 18f;
 
-        public static Rect Heart()
+        /// <summary>The health bar (bottom middle). Replaces the heart in V0.1.1.</summary>
+        public static Rect HealthBar()
         {
             float cx = Screen.width * 0.5f;
-            return new Rect(cx - HeartSize * 0.5f, Screen.height - Margin - HeartSize, HeartSize, HeartSize);
+            float y = Screen.height - Margin - SlotSize * 0.5f - BarHeight * 0.5f;
+            return new Rect(cx - BarWidth * 0.5f, y, BarWidth, BarHeight);
         }
 
         /// <summary>0 = LMB weapon, 1 = RMB weapon (left of the heart), 2 = Q skill, 3 = E skill (right).</summary>
         public static Rect Slot(int slot)
         {
-            var h = Heart();
+            var h = HealthBar();
             float y = Screen.height - Margin - SlotSize;
             float x;
             switch (slot)
             {
-                case 0: x = h.x - 24f - SlotSize - Gap - SlotSize; break;
-                case 1: x = h.x - 24f - SlotSize; break;
-                case 2: x = h.xMax + 110f; break;
-                default: x = h.xMax + 110f + SlotSize + Gap; break;
+                case 0: x = h.x - 20f - SlotSize - Gap - SlotSize; break;
+                case 1: x = h.x - 20f - SlotSize; break;
+                case 2: x = h.xMax + 20f; break;
+                default: x = h.xMax + 20f + SlotSize + Gap; break;
             }
             return new Rect(x, y, SlotSize, SlotSize);
-        }
-
-        public static Rect DefLabel()
-        {
-            var h = Heart();
-            return new Rect(h.xMax + 14f, h.y + HeartSize * 0.38f, 96f, 34f);
         }
 
         public static Rect MenuButton()

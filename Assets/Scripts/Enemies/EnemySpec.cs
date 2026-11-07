@@ -27,6 +27,10 @@ namespace Cellstorm.Enemies
         public float explosionRadius;
         public float explosionDamage;
 
+        public float supportStandOff;
+        public float healRange;
+        public float healFraction;
+
         public int scoreValue;
         public int expValue;
 
@@ -51,6 +55,9 @@ namespace Cellstorm.Enemies
                 explosionTriggerRange = t.explosionTriggerRange,
                 explosionRadius = t.explosionRadius,
                 explosionDamage = t.explosionDamage,
+                supportStandOff = t.supportStandOff,
+                healRange = t.healRange,
+                healFraction = t.healFraction,
                 scoreValue = t.scoreValue,
                 expValue = t.expValue,
                 isBoss = false,
