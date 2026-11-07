@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e85a31051a73b1c41aaf8e41b5ef2ff9, type: 3}
+  m_Name: regen
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.UpgradeSO
+  id: regen
+  displayName: Regeneration
+  description: Cell regen +1 per second.
+  icon: {fileID: 0}
+  iconGlyph: RG
+  iconColor: {r: 0.25, g: 0.6, b: 0.45, a: 1}
+  category: 0
+  repeatable: 1
+  unlockId: 
+  prerequisites: []
+  requirementUpgrade: {fileID: 0}
+  requirementStacks: 1
+  lockedOutBy: []
+  effect: 0
+  stat: 1
+  amount: 1
+  addCurrentCells: 1
+  percent: 0
+  secondaryStat: 0
+  secondaryPercent: 0
+  weapon: {fileID: 0}
+  evolutionDefMultiplier: 5
+  evolutionGrowthEffect: 0.5

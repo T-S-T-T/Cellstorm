@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.UpgradeSO
   id: gun
   displayName: Gun
-  description: Attack. Hold to form a barrel, release to fire a slow bullet with double DEF.
+  description: Attack. Hold to form a barrel, release to fire a bullet for 100 damage.
   icon: {fileID: 0}
   iconGlyph: GUN
   iconColor: {r: 0.8, g: 0.3, b: 0.3, a: 1}
@@ -33,5 +33,22 @@ MonoBehaviour:
   secondaryStat: 0
   secondaryPercent: 0
   weapon: {fileID: 11400000, guid: 7761d18900c0ad4488f23edb08e3fe92, type: 2}
+  potentCostFraction: 0.3
+  potentDamageMultiplier: 1.5
+  targetTypes: 
+  targetTags: 0
+  appliesToAll: 0
+  effects: []
+  maxStacks: 0
+  form: 0
+  cardGroup: 
+  stackText: 
+  evo: 0
+  condition: 0
+  requirementId: 
+  requirementCount: 1
+  requiredAnyOwned: 
+  lockoutIds: []
+  evoMaxHpMultiplier: 1
   evolutionDefMultiplier: 5
   evolutionGrowthEffect: 0.5

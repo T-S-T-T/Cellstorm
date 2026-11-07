@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e1494123511bc84383c1a41a65e4278, type: 3}
+  m_Name: EnemyMine
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.WeaponSO
+  id: enemy_mine
+  displayName: Enemy Mine
+  description: 'Boss mine: 20 damage to you and your minions, never to other enemies.'
+  icon: {fileID: 0}
+  kind: 0
+  type: 7
+  shapeTime: 0
+  executeTime: 0
+  cooldown: 4
+  cancelCooldown: 0.5
+  damage: 20
+  cellShare: 0
+  turnRateWhileActive: 0.3
+  dashMultiplier: 5
+  coneAngle: 90
+  coneRange: 2
+  bulletSpeedMultiplier: 2
+  pierce: 0
+  bulletRadius: 0.2
+  defMultiplier: 2
+  whipArc: 120
+  whipRange: 3
+  pullDistance: 1.5
+  pellets: 5
+  fanAngle: 40
+  pelletRange: 6
+  cloudRadius: 2.5
+  cloudDuration: 4
+  toxicDps: 5
+  toxicDuration: 1
+  mineArmTime: 1
+  mineTriggerRange: 1.2
+  mineLifetime: 15
+  blastRadius: 2
+  minionCostFraction: 0.025
+  minionContactDps: 10
+  minionCount: 1
+  orbFraction: 0.1
+  shockRadius: 5
+  shockPush: 4
+  shockStun: 1

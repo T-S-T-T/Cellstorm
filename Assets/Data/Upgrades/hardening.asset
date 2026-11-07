@@ -33,5 +33,22 @@ MonoBehaviour:
   secondaryStat: 0
   secondaryPercent: 0
   weapon: {fileID: 11400000, guid: a84d1aca1c7c7ce458e0cc4655182923, type: 2}
+  potentCostFraction: 0.3
+  potentDamageMultiplier: 1.5
+  targetTypes: 
+  targetTags: 0
+  appliesToAll: 0
+  effects: []
+  maxStacks: 0
+  form: 0
+  cardGroup: 
+  stackText: 
+  evo: 0
+  condition: 0
+  requirementId: 
+  requirementCount: 1
+  requiredAnyOwned: 
+  lockoutIds: []
+  evoMaxHpMultiplier: 1
   evolutionDefMultiplier: 5
   evolutionGrowthEffect: 0.5

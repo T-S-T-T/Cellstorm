@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.UpgradeSO
   id: evo_tank
   displayName: 'Evolution: Tank'
-  description: Evolution. DEF x5. Max cell and regen upgrades are half as effective from now on.
+  description: DEF x5. Max HP and regen upgrades are half as effective from now on. Locks out Swarm.
   icon: {fileID: 0}
   iconGlyph: TNK
   iconColor: {r: 0.85, g: 0.65, b: 0.15, a: 1}
@@ -22,10 +22,10 @@ MonoBehaviour:
   repeatable: 0
   unlockId: 
   prerequisites: []
-  requirementUpgrade: {fileID: 11400000, guid: b69440078e09af446bc7c381f870ba4e, type: 2}
-  requirementStacks: 5
+  requirementUpgrade: {fileID: 0}
+  requirementStacks: 1
   lockedOutBy: []
-  effect: 3
+  effect: 6
   stat: 2
   amount: 1
   addCurrentCells: 1
@@ -33,5 +33,23 @@ MonoBehaviour:
   secondaryStat: 0
   secondaryPercent: 0
   weapon: {fileID: 0}
+  potentCostFraction: 0.3
+  potentDamageMultiplier: 1.5
+  targetTypes: 
+  targetTags: 0
+  appliesToAll: 0
+  effects: []
+  maxStacks: 0
+  form: 0
+  cardGroup: 
+  stackText: Needs 5 Dense Cells
+  evo: 1
+  condition: 0
+  requirementId: dense_cells
+  requirementCount: 5
+  requiredAnyOwned: 
+  lockoutIds:
+  - evo_swarm
+  evoMaxHpMultiplier: 1
   evolutionDefMultiplier: 5
   evolutionGrowthEffect: 0.5

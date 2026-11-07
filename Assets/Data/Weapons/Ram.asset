@@ -14,23 +14,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.WeaponSO
   id: ram
   displayName: Ram
-  description: Dash quickly toward the cursor.
+  description: Dash toward the cursor for 0.3 s. Everything you touch takes 30 damage once.
   icon: {fileID: 0}
   kind: 0
   type: 0
   shapeTime: 0
-  executeTime: 0
+  executeTime: 0.3
   cooldown: 1
   cancelCooldown: 0.5
+  damage: 30
   cellShare: 0
   turnRateWhileActive: 0.3
-  dashSpeed: 12
+  dashMultiplier: 5
   coneAngle: 90
   coneRange: 2
-  biteDefMultiplier: 2
   bulletSpeedMultiplier: 2
-  bulletDefMultiplier: 2
   pierce: 0
   bulletRadius: 0.2
   defMultiplier: 2
-  autoWin: 1
+  whipArc: 120
+  whipRange: 3
+  pullDistance: 1.5
+  pellets: 5
+  fanAngle: 40
+  pelletRange: 6
+  cloudRadius: 2.5
+  cloudDuration: 4
+  toxicDps: 5
+  toxicDuration: 1
+  mineArmTime: 1
+  mineTriggerRange: 1.2
+  mineLifetime: 15
+  blastRadius: 2
+  minionCostFraction: 0.025
+  minionContactDps: 10
+  minionCount: 1
+  orbFraction: 0.1
+  shockRadius: 5
+  shockPush: 4
+  shockStun: 1

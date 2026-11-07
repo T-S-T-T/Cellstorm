@@ -14,15 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.EnemyTypeSO
   displayName: Multi Cell
   color: {r: 0.95, g: 0.6, b: 0.3, a: 1}
-  maxCells: 10
-  cellRegen: 1
+  maxHp: 100
   defense: 1
   speed: 1
+  contactDps: 10
   behavior: 0
   preferredRange: 6
   explosionTriggerRange: 0.6
   explosionRadius: 1.8
-  explosionDamage: 2
-  scoreValue: 1
-  scorePerCell: 1
+  explosionDamage: 20
+  supportStandOff: 8
+  healRange: 4
+  healFraction: 0.05
+  weapon: {fileID: 0}
+  scoreValue: 10
   expValue: 3

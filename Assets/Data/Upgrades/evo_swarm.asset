@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e85a31051a73b1c41aaf8e41b5ef2ff9, type: 3}
+  m_Name: evo_swarm
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.UpgradeSO
+  id: evo_swarm
+  displayName: 'Evolution: Swarm'
+  description: Each Minion activation spawns 2 more minions. Minion contact damage x2. Max HP x0.8. Locks out Tank.
+  icon: {fileID: 0}
+  iconGlyph: SWM
+  iconColor: {r: 0.85, g: 0.65, b: 0.15, a: 1}
+  category: 3
+  repeatable: 0
+  unlockId: 
+  prerequisites: []
+  requirementUpgrade: {fileID: 0}
+  requirementStacks: 1
+  lockedOutBy: []
+  effect: 6
+  stat: 2
+  amount: 1
+  addCurrentCells: 1
+  percent: 0
+  secondaryStat: 0
+  secondaryPercent: 0
+  weapon: {fileID: 0}
+  potentCostFraction: 0.3
+  potentDamageMultiplier: 1.5
+  targetTypes: 08000000i
+  targetTags: 0
+  appliesToAll: 0
+  effects:
+  - param: 27
+    op: 0
+    perStack: 2
+    firstBonus: 0
+    onlyTags: 0
+    filterType: 0
+    onlyType: 0
+  - param: 29
+    op: 2
+    perStack: 2
+    firstBonus: 0
+    onlyTags: 0
+    filterType: 0
+    onlyType: 0
+  maxStacks: 0
+  form: 0
+  cardGroup: 
+  stackText: Needs Minion and 3 Minion cards
+  evo: 2
+  condition: 1
+  requirementId: minion
+  requirementCount: 3
+  requiredAnyOwned: 08000000i
+  lockoutIds:
+  - evo_tank
+  evoMaxHpMultiplier: 0.8
+  evolutionDefMultiplier: 5
+  evolutionGrowthEffect: 0.5

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8432cba328601b9468cec90cd4b92640, type: 3}
+  m_Name: Giant
+  m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.StatBlockSO
+  maxHp: 100
+  hpRegen: 1
+  defense: 2
+  speed: 2
+  sizeMultiplier: 2
+  weaponCellCount: 200
+  startWeaponKey: 
+  startSkillKey: 

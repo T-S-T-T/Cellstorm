@@ -49,3 +49,12 @@ MonoBehaviour:
     - 0
     - 0.1
     - 1
+  - type: {fileID: 11400000, guid: 912d99b5305607f40ac25901ab0a7d4d, type: 2}
+    ratesPerSecond:
+    - 0
+    - 0
+    - 0.05
+    - 0.1
+    - 0.1
+    - 0.15
+    - 0.3

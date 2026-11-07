@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8432cba328601b9468cec90cd4b92640, type: 3}
   m_Name: Tank
   m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.StatBlockSO
-  maxCells: 5
-  cellRegen: 1
+  maxHp: 100
+  hpRegen: 1
   defense: 5
   speed: 1
+  sizeMultiplier: 1
+  weaponCellCount: 100
+  startWeaponKey: 
+  startSkillKey: 

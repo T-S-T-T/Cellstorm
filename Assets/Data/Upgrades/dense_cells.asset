@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Cellstorm.Data.UpgradeSO
   id: dense_cells
   displayName: Dense Cells
-  description: +20% DEF, -10% max cells. Collect 5 to unlock an evolution.
+  description: +20% DEF, -10% max HP. Collect 5 to unlock an evolution.
   icon: {fileID: 0}
   iconGlyph: DNS
   iconColor: {r: 0.25, g: 0.6, b: 0.45, a: 1}
@@ -33,5 +33,22 @@ MonoBehaviour:
   secondaryStat: 0
   secondaryPercent: -0.1
   weapon: {fileID: 0}
+  potentCostFraction: 0.3
+  potentDamageMultiplier: 1.5
+  targetTypes: 
+  targetTags: 0
+  appliesToAll: 0
+  effects: []
+  maxStacks: 0
+  form: 1
+  cardGroup: 
+  stackText: Multiplicative, no cap
+  evo: 0
+  condition: 0
+  requirementId: 
+  requirementCount: 1
+  requiredAnyOwned: 
+  lockoutIds: []
+  evoMaxHpMultiplier: 1
   evolutionDefMultiplier: 5
   evolutionGrowthEffect: 0.5
