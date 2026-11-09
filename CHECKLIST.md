@@ -43,7 +43,8 @@ Everything was written without compiling, so Part 0 comes first.
 - [ ] Debug `U` (20 damage test hit) at DEF 2 loses about 20 x (1 - DEF reduction); `,` and `.` change DEF and the damage taken.
 - [ ] DEF curve: DEF 1 ~ 5%, DEF 2 ~ 20%, DEF 5 ~ 40%, DEF 50 ~ 90% (cap). Self-test covers this.
 - [ ] Speed: 1 unit/s per Speed point (Default 2, Speedy 5, Tank 1).
-- [ ] Sizes are fixed: player radius 0.335 (Giant 0.67); changing HP with `1`-`5` or `=`/`-` never changes size.
+- [ ] Sizes are fixed: player radius 0.84 (0.335 x the size scale 2.5; Giant 1.68); changing HP with `1`-`5` or `=`/`-` never changes size. The scale is one constant, `SwarmSize.Scale`.
+- [ ] Soft-ball feel: the player and every enemy stretch along their movement, squash when hit, squash when they bump into something, and wobble slightly at rest. Check it is clearly visible at this size.
 - [ ] Giant loadout: double size, 200 max HP. Enemies' size is set once from their max HP and never changes.
 - [ ] Enemy stats: Single 10 HP / 5 contact; Multi 100 HP / 10; Ranged 100 HP (gun); Exploding 10 HP (explodes). Bosses 500 HP x milestone.
 
@@ -127,16 +128,16 @@ Each evolution is once per run, shows an "EVOLUTION" tag and its requirement tex
 - [ ] **Support Cell** appears from its start time: stands about 8 units away, heals other (non-support) enemies within 4 units by 5%/s (bosses 1%), green ring visible. Killing it is worth score/EXP like others.
 - [ ] Panel Spawn tab: spawn each enemy type; they behave (chase, ranged keeps distance, exploding explodes, support heals and stands off).
 - [ ] Bosses: spawn Boss N with each weapon (Ram, Jaw, Gun, Whip, Spread Shot, Spore Cloud, Mine). Each uses its weapon correctly: whip pulls, shotgun fans, cloud applies Toxic 3 HP/s to you and your minions, mine hurts only you and your minions, never other enemies.
-- [ ] Bosses never exceed one at a time per milestone; boss HP bar shows; defeating one gives its reward and counts toward achievements.
+- [ ] The boss HP bar shows; defeating a boss counts toward achievements (Whip: Boss 2, Convert: Boss 3).
 - [ ] Enemy cap: at most 50 non-boss enemies alive (guards do not count toward it).
 
 ### C7 World: resource points
 - [ ] First point appears at 90 s, then every 90 s, up to 2 active, only if fewer than 40 enemies are alive (retry every 10 s).
-- [ ] Off-screen arrow points to each active point (HUD), with remaining time.
+- [ ] An off-screen arrow points to each active point that is out of view.
 - [ ] Approaching (about 8 units) wakes the guards; guards leash to about 3 units from the point, never despawn by distance, and are not counted in the 50-enemy cap.
-- [ ] Kinds: Group (many basic guards), Elite (few strong), Mixed. Panel World tab spawns each.
-- [ ] Defeating all guards captures it: reward drops (EXP burst, Nutrient heals 30% max HP, Adrenaline Speed +2 for 10 s with refresh, Reroll). Panel "Capture nearest point" does the same.
-- [ ] A point expires after 180 s without a capture, with no reward.
+- [ ] Kinds: Group, Elite, Mixed (panel World tab spawns each). Guard counts and strength rise from Group to Elite to Mixed.
+- [ ] Defeating all guards captures it: an EXP burst (Group 50%, Elite 75%, Mixed 100% of the EXP needed for the next level, in up to 5 orbs) plus pickups: Group 1, Elite 2, Mixed 3 of {Nutrient (heals 30% max HP), a buff (Shells or Adrenaline: Speed +2 for 10 s), Reroll token}. Panel "Capture nearest point" does the same.
+- [ ] A point expires after 180 s without a capture, with no reward; its remaining guards despawn.
 
 ### C8 World: hazards
 - [ ] Hazard zones fade in over 2 s (harmless while fading), stay ~20 s, then fade out 2 s. Interval shrinks with milestone (45 s down to 20 s), max 3 active.

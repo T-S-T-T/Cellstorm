@@ -95,9 +95,9 @@ namespace Cellstorm.Swarm
 
         float DesiredSize()
         {
-            // Fixed body sizes: a normal swarm (0.335) sees minOrthoSize; the Giant (0.67) gets a wider view so its
+            // Fixed body sizes: a normal swarm sees minOrthoSize; the Giant (twice as big) gets a wider view so its
             // 200 weapon cells and the enemies around it stay on screen.
-            float extra = Mathf.Max(0f, target.SmoothedRadius - SwarmSize.PlayerRadius) * 8f;
+            float extra = Mathf.Max(0f, target.SmoothedRadius - SwarmSize.PlayerRadius) * 8f / SwarmSize.Scale;
             return Mathf.Max(minOrthoSize + extra, target.SmoothedRadius * orthoPerRadius);
         }
     }

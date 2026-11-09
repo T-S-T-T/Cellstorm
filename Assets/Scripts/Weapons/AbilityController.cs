@@ -68,7 +68,7 @@ namespace Cellstorm.Weapons
         public Vector2 Position => transform.position;
         public float Radius => _col != null ? _col.radius : 0.5f;
         /// <summary>Radius of one weapon cell. 100 to 200 small cells make a thick shape.</summary>
-        public float WeaponCellRadius => Mathf.Clamp(Radius * 0.22f, 0.06f, 0.4f);
+        public float WeaponCellRadius => Mathf.Clamp(Radius * 0.22f, 0.06f, 0.4f * SwarmSize.Scale);
 
         /// <summary>How many cells a deployed weapon uses: 100 by default, 200 for the Giant, 100 for enemies.</summary>
         public int WeaponCellCount => _isPlayer ? RunSetup.WeaponCellCount : 100;

@@ -74,6 +74,24 @@ namespace Cellstorm.Combat
             WeaponCellGroup.DamageCircle(transform.position, r, ContactDps * Time.fixedDeltaTime, faction);
         }
 
+        float _nextSquashTime;
+
+        /// <summary>Soft-ball feel: any bump (swarm against swarm, or a hard shove) squashes the ball toward the contact.</summary>
+        void OnCollisionEnter2D(Collision2D c)
+        {
+            SquashFrom(c, 1.6f);
+        }
+
+        void SquashFrom(Collision2D c, float gain)
+        {
+            if (_visual == null) _visual = GetComponent<IHitVisual>();     // enemies add their visual after this component
+            if (_visual == null || Stats == null || Stats.IsDead || Time.time < _nextSquashTime) return;
+            float speed = c.relativeVelocity.magnitude;
+            if (speed < 0.6f) return;
+            _nextSquashTime = Time.time + 0.12f;
+            _visual.Hit(c.GetContact(0).point, Mathf.Clamp(speed * gain, 1.5f, 6f));
+        }
+
         void OnCollisionStay2D(Collision2D c)
         {
             if (!TryGetOpponent(c, out var other)) return;
@@ -100,6 +118,7 @@ namespace Cellstorm.Combat
 
         public void ReactToHit(Vector2 worldPoint)
         {
+            if (_visual == null) _visual = GetComponent<IHitVisual>();
             if (_visual == null || Time.time < _nextDentTime) return;
             _nextDentTime = Time.time + 0.25f;
             _visual.Hit(worldPoint, dentStrength);

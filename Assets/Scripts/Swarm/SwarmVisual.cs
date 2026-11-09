@@ -117,7 +117,7 @@ namespace Cellstorm.Swarm
         {
             if (body == null) return;
             Vector2 dir = worldPoint - (Vector2)body.transform.position;
-            _deform.Hit(dir, strength * 0.06f * hitSquash);
+            _deform.Hit(dir, strength * 0.09f * hitSquash);
         }
 
         /// <summary>Debug-friendly overload used by the old debug keys. Negative strength = default.</summary>

@@ -73,7 +73,7 @@ namespace Cellstorm.Swarm
 
         public void Hit(Vector2 worldPoint, float strength)
         {
-            _deform.Hit(worldPoint - (Vector2)transform.position, strength * 0.06f);
+            _deform.Hit(worldPoint - (Vector2)transform.position, strength * 0.09f);
         }
 
         /// <summary>Same call the player visual has, so SwarmCombat and debug code do not care which one it is.</summary>

@@ -50,11 +50,11 @@ namespace Cellstorm.Swarm
                 float target = Mathf.Atan2(velocity.y, velocity.x);
                 _a1 = Mathf.LerpAngle(_a1 * Mathf.Rad2Deg, target * Mathf.Rad2Deg, 1f - Mathf.Exp(-12f * dt)) * Mathf.Deg2Rad;
             }
-            float t1 = Mathf.Clamp(speed * 0.045f, 0f, 0.3f);
+            float t1 = Mathf.Clamp(speed * 0.07f, 0f, 0.35f);
             Spring(ref _s1, ref _v1, t1, dt);
             Spring(ref _s2, ref _v2, 0f, dt);
 
-            float wob = 0.022f * Mathf.Sin(time * 2.3f + _seed);
+            float wob = 0.035f * Mathf.Sin(time * 2.3f + _seed);
             float aw = time * 0.35f + _seed;
 
             float x = _s1 * Mathf.Cos(2f * _a1) + _s2 * Mathf.Cos(2f * _a2) + wob * Mathf.Cos(2f * aw);

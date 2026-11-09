@@ -16,7 +16,7 @@ namespace Cellstorm.Weapons
     [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D), typeof(SwarmStats))]
     public class Minion : MonoBehaviour, ITargetable, IKnockbackable
     {
-        public const float BodyRadius = 0.15f;
+        public const float BodyRadius = 0.15f * SwarmSize.Scale;
         public const float SeekRange = 15f;
         /// <summary>An unnamed physics layer so minions can pass through each other (layer 29 is not used elsewhere).</summary>
         public const int PhysicsLayer = 29;
